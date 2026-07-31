@@ -1,0 +1,33 @@
+@model barberia_turnos_mvc.Models.Servicio
+
+@{
+    ViewData["Title"] = "Eliminar Servicio";
+}
+
+<h1>Eliminar Servicio</h1>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="caja-eliminar">
+    <p>¿Estás seguro que querés eliminar este servicio?</p>
+
+    <dl class="row detalle-info">
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">@Model.Nombre</dd>
+
+        <dt class="col-sm-3">Precio</dt>
+        <dd class="col-sm-9">$@Model.Precio.ToString("N2")</dd>
+
+        <dt class="col-sm-3">Duración</dt>
+        <dd class="col-sm-9">@Model.DuracionMinutos min</dd>
+
+        <dt class="col-sm-3">Barbería</dt>
+        <dd class="col-sm-9">@Model.Barberia.Nombre</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn-confirmar-eliminar">Eliminar</button>
+        <a asp-action="Index" class="btn-cancelar">Cancelar</a>
+    </form>
+</div>

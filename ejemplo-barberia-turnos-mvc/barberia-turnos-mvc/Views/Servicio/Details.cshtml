@@ -1,0 +1,25 @@
+@model barberia_turnos_mvc.Models.Servicio
+
+@{
+    ViewData["Title"] = "Detalle del Servicio";
+}
+
+<h1>Detalle del Servicio</h1>
+<div class="caja-detalle">
+
+<dl class="row detalle-info">
+    <dt class="col-sm-3">Nombre</dt>
+    <dd class="col-sm-9">@Model.Nombre</dd>
+
+    <dt class="col-sm-3">Precio</dt>
+    <dd class="col-sm-9">$@Model.Precio.ToString("N2")</dd>
+
+    <dt class="col-sm-3">Duración</dt>
+    <dd class="col-sm-9">@Model.DuracionMinutos min</dd>
+
+    <dt class="col-sm-3">Barbería</dt>
+    <dd class="col-sm-9">@Model.Barberia.Nombre</dd>
+</dl>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-editar">Editar</a> 
+    <a asp-action="Index" class="btn btn-volver-listado">Volver al listado</a>
+</div>

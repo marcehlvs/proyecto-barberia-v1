@@ -1,0 +1,40 @@
+@model barberia_turnos_mvc.Models.Turno
+
+@{
+    ViewData["Title"] = "Editar Turno";
+}
+
+<h1>Editar Turno</h1>
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<form asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="BarberiaId" />
+
+    <div class="form-group">
+        <label asp-for="FechaHora"></label>
+        <input asp-for="FechaHora" class="form-control" step="300" />
+        <span asp-validation-for="FechaHora" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Estado"></label>
+        <select asp-for="Estado" class="form-control" asp-items="Html.GetEnumSelectList<barberia_turnos_mvc.Models.EstadoTurno>()"></select>
+    </div>
+    <div class="form-group">
+        <label>Cliente</label>
+        <select asp-for="ClienteId" class="form-control" asp-items="@(ViewData["ClienteId"] as SelectList)"></select>
+    </div>
+    <div class="form-group">
+        <label>Servicio</label>
+        <select asp-for="ServicioId" class="form-control" asp-items="@(ViewData["ServicioId"] as SelectList)"></select>
+    </div>
+
+    <button type="submit" class="btn btn-guardar">Guardar</button>
+</form>
+
+<a asp-action="Index">Volver al listado</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

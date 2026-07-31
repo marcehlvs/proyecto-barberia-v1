@@ -1,0 +1,38 @@
+@model barberia_turnos_mvc.Models.Servicio
+
+@{
+    ViewData["Title"] = "Editar Servicio";
+}
+
+
+
+<h1>Editar Servicio</h1>
+<div asp-validation-summary="All" class="text-danger"></div>
+<form asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="BarberiaId" />
+
+    <div class="form-group">
+        <label asp-for="Nombre"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Precio"></label>
+        <input asp-for="Precio" class="form-control" />
+        <span asp-validation-for="Precio" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="DuracionMinutos"></label>
+        <input asp-for="DuracionMinutos" class="form-control" />
+        <span asp-validation-for="DuracionMinutos" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-guardar">Guardar</button>
+</form>
+
+<a asp-action="Index">Volver al listado</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

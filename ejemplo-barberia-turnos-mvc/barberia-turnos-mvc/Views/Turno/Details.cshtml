@@ -1,0 +1,29 @@
+@* Details.cshtml *@
+@model barberia_turnos_mvc.Models.Turno
+@using barberia_turnos_mvc.Helpers
+
+@{
+    ViewData["Title"] = "Detalle del Turno";
+}
+
+<h1>Detalle del Turno</h1>
+
+<div class="caja-detalle">
+
+<dl class="row detalle-info">
+    <dt class="col-sm-3">Fecha y hora</dt>
+    <dd class="col-sm-9">@Model.FechaHora.ToString("dd/MM/yyyy HH:mm")</dd>
+
+    <dt class="col-sm-3">Estado</dt>
+    <dd class="col-sm-9"><span class="badge-estado badge-@Model.Estado.ToString().ToLower()">@Model.Estado.GetDisplayName()</span></dd>
+
+    <dt class="col-sm-3">Cliente</dt>
+    <dd class="col-sm-9">@Model.Cliente.NombreCompleto</dd>
+
+    <dt class="col-sm-3">Servicio</dt>
+    <dd class="col-sm-9">@Model.Servicio.Nombre</dd>
+</dl>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-editar">Editar</a>
+<a asp-action="Index" class="btn btn-volver-listado">Volver al listado</a>
+</div>

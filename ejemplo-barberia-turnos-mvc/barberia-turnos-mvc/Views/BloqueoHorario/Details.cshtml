@@ -1,0 +1,26 @@
+﻿@model barberia_turnos_mvc.Models.BloqueoHorario
+
+@{
+    ViewData["Title"] = "Detalle del Bloqueo";
+}
+
+<h1>Detalle del Bloqueo de Horario</h1>
+
+<div class="caja-detalle">
+    <dl class="row detalle-info">
+        <dt class="col-sm-3">Desde</dt>
+        <dd class="col-sm-9">@Model.FechaInicio.ToString("dd/MM/yyyy HH:mm")</dd>
+
+        <dt class="col-sm-3">Hasta</dt>
+        <dd class="col-sm-9">@Model.FechaFin.ToString("dd/MM/yyyy HH:mm")</dd>
+
+        <dt class="col-sm-3">Motivo</dt>
+        <dd class="col-sm-9">@(Model.Motivo ?? "-")</dd>
+
+        <dt class="col-sm-3">Barbería</dt>
+        <dd class="col-sm-9">@Model.Barberia.Nombre</dd>
+    </dl>
+</div>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-editar">Editar</a>
+<a asp-action="Index" class="btn-volver-listado">Volver al listado</a>

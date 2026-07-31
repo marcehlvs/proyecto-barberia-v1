@@ -1,0 +1,23 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+    var statusCode = ViewData["StatusCode"] as int?;
+    var titulo = statusCode == 404 ? "No encontramos esta página" : "Algo salió mal...";
+    var mensaje = statusCode == 404
+        ? "El turno, servicio o cliente que buscás no existe o fue eliminado."
+        : "Ocurrió un problema inesperado. Ya estamos al tanto y lo vamos a resolver.";
+}
+
+<section class="error-pagina">
+    <h1>@titulo</h1>
+    <p class="error-mensaje">@mensaje</p>
+
+    @if (Model.ShowRequestId)
+    {
+        <p class="error-request-id">
+            Código de referencia: <code>@Model.RequestId</code>
+        </p>
+    }
+
+    <a asp-controller="Home" asp-action="Index" class="btn-reservar">Volver al inicio</a>
+</section>

@@ -1,0 +1,12 @@
+﻿@{
+    ViewData["Title"] = "Pago aprobado";
+}
+
+<div class="error-pagina">
+    <h1>¡Seña confirmada!</h1>
+    <span class="badge-estado badge-confirmado" style="font-size:1rem; padding:0.5rem 1.2rem;">Pago aprobado</span>
+    <p class="error-mensaje" style="margin-top:1.5rem;">
+        Tu turno quedó confirmado. En breve vas a poder verlo reflejado en tus turnos.
+    </p>
+    <a asp-controller="MiCuenta" asp-action="MisTurnos" class="btn-cancelar">Ver mis turnos</a>
+</div>

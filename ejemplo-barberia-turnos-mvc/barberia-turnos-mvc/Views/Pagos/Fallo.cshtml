@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Pago rechazado";
+}
+
+<section class="resultado-pago">
+    <h1>El pago no pudo procesarse</h1>
+    <span class="badge-estado badge-cancelado">Pago rechazado</span>
+
+    <p>
+        No pudimos acreditar el pago de la seña. Esto puede pasar por fondos insuficientes,
+        datos de la tarjeta incorrectos, o que el banco rechazó la operación.
+    </p>
+    <p>
+        Tu turno quedó reservado por unos minutos más — podés reintentar el pago desde
+        "Mis Turnos" antes de que se libere el horario.
+    </p>
+
+    <a asp-controller="MiCuenta" asp-action="MisTurnos" class="btn-reservar">Ver Mis Turnos</a>
+</section>

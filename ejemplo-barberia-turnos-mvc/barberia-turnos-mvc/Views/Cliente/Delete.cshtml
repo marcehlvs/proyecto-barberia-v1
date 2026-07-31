@@ -1,0 +1,27 @@
+@model barberia_turnos_mvc.Models.Cliente
+
+@{
+    ViewData["Title"] = "Eliminar Cliente";
+}
+
+<h1>Eliminar Cliente</h1>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="caja-eliminar">
+    <p>¿Estás seguro que querés eliminar este cliente?</p>
+
+    <dl class="row detalle-info">
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">@Model.Nombre @Model.Apellido</dd>
+
+        <dt class="col-sm-3">Teléfono</dt>
+        <dd class="col-sm-9">@Model.Telefono</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn-confirmar-eliminar">Eliminar</button>
+        <a asp-action="Index" class="btn-cancelar">Cancelar</a>
+    </form>
+</div>

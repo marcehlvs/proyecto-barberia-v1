@@ -1,0 +1,31 @@
+@* Delete.cshtml *@
+@model barberia_turnos_mvc.Models.Turno
+
+@{
+    ViewData["Title"] = "Eliminar Turno";
+}
+
+<h1>Eliminar Turno</h1>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="caja-eliminar">
+    <p>¿Estás seguro que querés eliminar este turno?</p>
+
+    <dl class="row detalle-info">
+        <dt class="col-sm-3">Fecha y hora</dt>
+        <dd class="col-sm-9">@Model.FechaHora.ToString("dd/MM/yyyy HH:mm")</dd>
+
+        <dt class="col-sm-3">Cliente</dt>
+        <dd class="col-sm-9">@Model.Cliente.NombreCompleto</dd>
+
+        <dt class="col-sm-3">Servicio</dt>
+        <dd class="col-sm-9">@Model.Servicio.Nombre</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn-confirmar-eliminar">Eliminar</button>
+        <a asp-action="Index" class="btn-cancelar">Cancelar</a>
+    </form>
+</div>

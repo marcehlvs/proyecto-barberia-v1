@@ -1,0 +1,24 @@
+@model barberia_turnos_mvc.Models.Cliente
+
+@{
+    ViewData["Title"] = "Detalle del Cliente";
+}
+
+<h1>Detalle del Cliente</h1>
+
+<div class="caja-detalle" 
+
+<dl class="row detalle-info">
+    <dt class="col-sm-3">Nombre</dt>
+    <dd class="col-sm-9">@Model.Nombre @Model.Apellido</dd>
+
+    <dt class="col-sm-3">Teléfono</dt>
+    <dd class="col-sm-9">@Model.Telefono</dd>
+
+    <dt class="col-sm-3">Turnos registrados</dt>
+    <dd class="col-sm-9">@Model.Turnos.Count()</dd>
+</dl>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-editar">Editar</a>
+<a asp-action="Index" class="btn btn-volver-listado">Volver al listado</a>
+</div>

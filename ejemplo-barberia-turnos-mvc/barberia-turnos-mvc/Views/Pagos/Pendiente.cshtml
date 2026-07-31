@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Pago pendiente";
+}
+
+<section class="resultado-pago">
+    <h1>Tu pago está pendiente</h1>
+    <span class="badge-estado badge-pendiente">Pago pendiente</span>
+
+    <p>
+        Elegiste un medio de pago que tarda en confirmarse (como Pago Fácil, Rapipago, o
+        una transferencia). En cuanto se acredite, tu turno va a pasar a "Confirmado" automáticamente
+        — no necesitás hacer nada más.
+    </p>
+    <p>
+        Si pagaste con estos medios, puede demorar hasta 2 días hábiles en reflejarse.
+    </p>
+
+    <a asp-controller="MiCuenta" asp-action="MisTurnos" class="btn-reservar">Ver Mis Turnos</a>
+</section>

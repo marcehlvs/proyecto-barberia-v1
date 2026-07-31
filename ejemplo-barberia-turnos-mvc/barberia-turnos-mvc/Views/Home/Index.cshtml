@@ -1,0 +1,60 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using barberia_turnos_mvc.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@model barberia_turnos_mvc.Models.Barberia
+
+@{
+    ViewData["Title"] = "Inicio";
+}
+
+<section class="hero hero-video">
+    <video class="hero-video-bg" autoplay muted loop playsinline poster="~/media/hero-interior.jpg">
+        <source src="~/media/hero-barberia.mp4" type="video/mp4">
+    </video>
+    <div class="hero-overlay"></div>
+
+    <div class="hero-contenido">
+        <h1>@(Model?.Nombre ?? "Barbería")</h1>
+        <p class="tagline">Turnos online · Sin vueltas</p>
+
+        @if (SignInManager.IsSignedIn(User) && User.IsInRole("Cliente"))
+        {
+            <a asp-controller="MiCuenta" asp-action="Reservar" class="btn btn-reservar">Reservar turno</a>
+        }
+        else if (SignInManager.IsSignedIn(User) && User.IsInRole("Dueño"))
+        {
+            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-reservar">Ver panel</a>
+        }
+        else
+        {
+            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-reservar">Reservar turno</a>
+        }
+    </div>
+</section>
+
+<div class="franja"></div>
+
+<section class="servicios">
+    <h2>Servicios</h2>
+
+    @if (Model?.Servicios != null && Model.Servicios.Any())
+    {
+        <ul class="lista-precios">
+            @foreach (var servicio in Model.Servicios)
+            {
+                <li>
+                    <span class="nombre-servicio">
+                        @servicio.Nombre
+                        <span class="duracion">@servicio.DuracionMinutos min</span>
+                    </span>
+                    <span class="relleno"></span>
+                    <span class="precio">$@servicio.Precio.ToString("N0")</span>
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p class="text-center">Todavía no hay servicios cargados.</p>
+    }
+</section>

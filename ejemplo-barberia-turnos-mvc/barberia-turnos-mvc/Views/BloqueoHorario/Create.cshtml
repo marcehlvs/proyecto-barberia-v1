@@ -1,0 +1,35 @@
+﻿@model barberia_turnos_mvc.Models.BloqueoHorario
+
+@{
+    ViewData["Title"] = "Nuevo Bloqueo de Horario";
+}
+
+<h1>Nuevo Bloqueo de Horario</h1>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Create">
+    <div class="form-group">
+        <label asp-for="FechaInicio"></label>
+        <input asp-for="FechaInicio" class="form-control" />
+        <span asp-validation-for="FechaInicio" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="FechaFin"></label>
+        <input asp-for="FechaFin" class="form-control" />
+        <span asp-validation-for="FechaFin" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Motivo"></label>
+        <input asp-for="Motivo" class="form-control" placeholder="Ej: Vacaciones, feriado, licencia..." />
+        <span asp-validation-for="Motivo" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn-guardar">Guardar</button>
+</form>
+
+<a asp-action="Index" class="btn-volver-listado">Volver al listado</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

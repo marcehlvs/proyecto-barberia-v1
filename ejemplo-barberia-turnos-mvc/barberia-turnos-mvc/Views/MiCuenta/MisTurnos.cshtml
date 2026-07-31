@@ -1,0 +1,66 @@
+﻿@* Views/MiCuenta/MisTurnos.cshtml *@
+@model barberia_turnos_mvc.Models.Cliente
+@using barberia_turnos_mvc.Helpers
+
+@{
+    ViewData["Title"] = "Mis Turnos";
+}
+
+<h1>Mis Turnos</h1>
+<div class="acciones-mis-turnos">
+    <a asp-action="Reservar" class="btn-crear">+ Reservar turno</a>
+    <a asp-action="Editar" class="btn-volver-listado">Editar mi perfil</a>
+</div>
+
+
+@if (!Model.Turnos.Any())
+{
+    <p>Todavía no tenés turnos reservados.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Fecha y hora</th>
+                    <th>Servicio</th>
+                    <th>Estado</th>
+                    <th>Seña</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var turno in Model.Turnos.OrderByDescending(t => t.FechaHora))
+                {
+                    <tr>
+                        <td>@turno.FechaHora.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@turno.Servicio.Nombre</td>
+                        <td><span class="badge-estado badge-@turno.Estado.ToString().ToLower()">@turno.Estado.GetDisplayName()</span></td>
+                        <td>
+                            @if (turno.SeñaPagada)
+                            {
+                                <span class="badge-estado badge-confirmado">Pagada</span>
+                            }
+                            else if (turno.MontoSeña != null)
+                            {
+                                <span class="badge-estado badge-pendiente">Pendiente ($@turno.MontoSeña)</span>
+                            }
+                        </td>
+                        
+                            @if (!turno.SeñaPagada
+                                && turno.MontoSeña != null
+                                && turno.Estado != EstadoTurno.Cancelado)
+                            {
+                                <div class="acciones-tabla">
+                                    <a asp-controller="Pagos" asp-action="IniciarPago" asp-route-turnoId="@turno.Id" class="btn btn-editar">Reintentar pago</a>
+                                </div>
+                       
+                            }
+                        
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "Reservar Turno";
+}
+
+<h1>Reservar Turno</h1>
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<form asp-action="Reservar">
+    <div class="form-group">
+        <label>Fecha y hora</label>
+        <input type="datetime-local" name="fechaHora" class="form-control" step="300" required />
+    </div>
+    <div class="form-group">
+        <label>Servicio</label>
+        <select name="servicioId" class="form-control" asp-items="@(ViewData["ServicioId"] as SelectList)"></select>
+    </div>
+
+    <button type="submit" class="btn-guardar">Reservar</button>
+</form>
+
+<a asp-action="MisTurnos" class="btn-volver-listado">Volver a Mis Turnos</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

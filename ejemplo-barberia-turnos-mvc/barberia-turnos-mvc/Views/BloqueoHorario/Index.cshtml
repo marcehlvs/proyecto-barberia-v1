@@ -1,0 +1,40 @@
+﻿@model IEnumerable<barberia_turnos_mvc.Models.BloqueoHorario>
+
+
+@{
+    ViewData["Title"] = "Bloqueos de Horario";
+}
+
+<h1>Bloqueos de Horario</h1>
+
+<a asp-action="Create" class="btn-crear">+ Crear nuevo</a>
+<div class="table-responsive">
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Desde</th>
+            <th>Hasta</th>
+            <th>Motivo</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@item.FechaFin.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@(item.Motivo ?? "-")</td>
+                <td>
+                    <div class="acciones-tabla">
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-editar">Editar</a>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-detalle">Detalles</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-eliminar">Eliminar</a>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+</div>

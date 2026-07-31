@@ -1,0 +1,48 @@
+@model barberia_turnos_mvc.Helpers.PaginatedList<barberia_turnos_mvc.Models.Cliente>
+
+@{
+    ViewData["Title"] = "Clientes";
+}
+
+<h1>Clientes</h1>
+
+<a asp-action="Create" class="btn-crear">+ Crear nuevo</a>
+<div class="table-responsive"> 
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Teléfono</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Nombre</td>
+                <td>@item.Apellido</td>
+                <td>@item.Telefono</td>
+                <td>
+                    <div class="acciones-tabla">
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-editar">Editar</a>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-detalle">Detalles</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-eliminar">Eliminar</a>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+    <div class="paginador">
+        <a asp-action="Index" asp-route-pagina="@(Model.PaginaActual - 1)"
+           class="btn-volver-listado @(!Model.TienePaginaAnterior ? "disabled" : "")">« Anterior</a>
+
+        <span>Página @Model.PaginaActual de @Model.TotalPaginas</span>
+
+        <a asp-action="Index" asp-route-pagina="@(Model.PaginaActual + 1)"
+           class="btn-volver-listado @(!Model.TienePaginaSiguiente ? "disabled" : "")">Siguiente »</a>
+    </div>
+</div>

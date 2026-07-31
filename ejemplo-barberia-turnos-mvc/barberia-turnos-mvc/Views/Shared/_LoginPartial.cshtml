@@ -1,0 +1,29 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using barberia_turnos_mvc.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        @if (User.IsInRole("Cliente"))
+        {
+            <li class="nav-item"><a class="nav-link" asp-controller="MiCuenta" asp-action="Reservar">Reservar Turno</a></li>
+        }
+        <li class="nav-item">
+            <span class="nav-link">Hola, @User.Identity!.Name</span>
+        </li>
+        <li class="nav-item">
+            <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
+                <button type="submit" class="nav-link btn btn-link">Salir</button>
+            </form>
+        </li>
+    }
+
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">Ingresar</a>
+        </li>
+    }
+</ul>

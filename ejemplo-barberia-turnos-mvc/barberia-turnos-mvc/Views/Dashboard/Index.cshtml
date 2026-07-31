@@ -1,0 +1,70 @@
+﻿@model barberia_turnos_mvc.Models.DashboardViewModel
+@using barberia_turnos_mvc.Helpers
+
+@{
+    ViewData["Title"] = "Panel";
+}
+
+<h1>Panel de la Barbería</h1>
+
+<div class="dashboard-resumen">
+    <div class="tarjeta-resumen">
+        <span class="tarjeta-numero">@Model.TurnosDeHoy.Count</span>
+        <span class="tarjeta-label">Turnos hoy</span>
+    </div>
+    <div class="tarjeta-resumen">
+        <span class="tarjeta-numero">@Model.TurnosConfirmadosHoy</span>
+        <span class="tarjeta-label">Confirmados hoy</span>
+    </div>
+    <div class="tarjeta-resumen tarjeta-alerta">
+        <span class="tarjeta-numero">@Model.TurnosPendientesDePago</span>
+        <span class="tarjeta-label">Pendientes de pago</span>
+    </div>
+    <div class="tarjeta-resumen tarjeta-ingresos">
+        <span class="tarjeta-numero">$@Model.IngresosDelMes.ToString("N0")</span>
+        <span class="tarjeta-label">Ingresos del mes</span>
+    </div>
+</div>
+
+<h2>Agenda de hoy</h2>
+
+@if (!Model.TurnosDeHoy.Any())
+{
+    <p>No hay turnos agendados para hoy.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <th>Cliente</th>
+                    <th>Servicio</th>
+                    <th>Estado</th>
+                    <th>Seña</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var turno in Model.TurnosDeHoy)
+                {
+                    <tr>
+                        <td>@turno.FechaHora.ToString("HH:mm")</td>
+                        <td>@turno.Cliente.NombreCompleto</td>
+                        <td>@turno.Servicio.Nombre</td>
+                        <td><span class="badge-estado badge-@turno.Estado.ToString().ToLower()">@turno.Estado.GetDisplayName()</span></td>
+                        <td>@(turno.SeñaPagada ? "Pagada" : "Pendiente")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<h2>Accesos rápidos</h2>
+<div class="acciones-tabla">
+    <a asp-controller="Turno" asp-action="Index" class="btn btn-editar">Ver todos los turnos</a>
+    <a asp-controller="Servicio" asp-action="Index" class="btn btn-editar">Servicios</a>
+    <a asp-controller="Cliente" asp-action="Index" class="btn btn-editar">Clientes</a>
+    <a asp-controller="BloqueoHorario" asp-action="Index" class="btn btn-editar">Bloqueos</a>
+</div>

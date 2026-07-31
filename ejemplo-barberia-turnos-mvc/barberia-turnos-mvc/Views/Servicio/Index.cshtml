@@ -1,0 +1,49 @@
+@model IEnumerable<barberia_turnos_mvc.Models.Servicio>
+
+@{
+    ViewData["Title"] = "Servicios";
+}
+
+ <h1>Servicios</h1>
+
+ <a asp-action="Create" class="btn-crear">+ Crear nuevo</a>
+<div class="table-responsive">
+
+ <table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Duración (min)</th>
+            <th>Barbería</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Nombre</td>
+                <td>@item.Precio.ToString("N2")</td>
+                <td>@item.DuracionMinutos</td>
+                <td>@item.Barberia.Nombre</td>
+               
+                
+                <td>
+                    <div class="acciones-tabla">
+                      @if (User.IsInRole("Dueño"))
+                        {
+                          <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-editar">Editar</a>
+                        }
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-detalle">Detalles</a>
+                      @if (User.IsInRole("Dueño"))
+                        {
+                           <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-eliminar">Eliminar</a>
+                        }
+                   </div>
+                 </td>       
+            </tr>
+        }
+    </tbody>
+</table>
+</div>
