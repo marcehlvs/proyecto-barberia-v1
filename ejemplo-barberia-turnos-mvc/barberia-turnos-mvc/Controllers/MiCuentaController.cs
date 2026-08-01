@@ -68,6 +68,20 @@ namespace barberia_turnos_mvc.Controllers
             return View(clienteEditado);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> HorariosDisponibles(DateTime fecha, int servicioId)
+        {
+            var horarios = await _validacionService.GenerarHorariosDelDia(fecha, servicioId);
+
+            var resultado = horarios.Select(h => new
+            {
+                hora = h.Hora.ToString(@"hh\:mm"),
+                disponible = h.Disponible
+            });
+
+            return Json(resultado);
+        }
+        
         public async Task<IActionResult> MisTurnos()
         {
             var userId = _userManager.GetUserId(User);
@@ -81,7 +95,7 @@ namespace barberia_turnos_mvc.Controllers
 
             return View(cliente);
         }
-
+        [HttpGet]
         // GET: MiCuenta/Reservar
         public IActionResult Reservar()
         {
@@ -126,6 +140,7 @@ namespace barberia_turnos_mvc.Controllers
                     ViewData["ServicioId"] = new SelectList(_context.Servicios, "Id", "Nombre", servicioId);
                     return View();
                 }
+
                 var servicio = await _context.Servicios.FindAsync(servicioId);
                 if (servicio == null) return NotFound();
 

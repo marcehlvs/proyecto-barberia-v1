@@ -158,8 +158,53 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    var htmlMessage = $@"
+<div style='font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 30px 0;'>
+    <div style='background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.08);'>
+
+        <div style='background-color: #1a1a1a; padding: 32px 24px; text-align: center;'>
+            <h1 style='color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;'>
+                💈 BARBERÍA EL CORTE
+            </h1>
+        </div>
+
+        <div style='padding: 32px 24px;'>
+            <h2 style='color: #1a1a1a; margin-top: 0; font-size: 20px;'>
+                ¡Bienvenido!
+            </h2>
+            <p style='color: #444444; font-size: 15px; line-height: 1.6;'>
+                Gracias por registrarte en <strong>Barbería El Corte</strong>. Para empezar a reservar tus turnos, primero necesitamos que confirmes tu dirección de email.
+            </p>
+
+            <div style='text-align: center; margin: 32px 0;'>
+                <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'
+                   style='background-color: #c9a227; color: #1a1a1a; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block;'>
+                    Confirmar mi cuenta
+                </a>
+            </div>
+
+            <p style='color: #888888; font-size: 13px; line-height: 1.5;'>
+                Si el botón no funciona, copiá y pegá este link en tu navegador:<br>
+                <a href='{HtmlEncoder.Default.Encode(callbackUrl)}' style='color: #c9a227; word-break: break-all;'>{HtmlEncoder.Default.Encode(callbackUrl)}</a>
+            </p>
+
+            <hr style='border: none; border-top: 1px solid #eeeeee; margin: 28px 0;'>
+
+            <p style='color: #aaaaaa; font-size: 12px; line-height: 1.5;'>
+                Si no creaste esta cuenta, podés ignorar este mensaje con total tranquilidad.
+            </p>
+        </div>
+
+        <div style='background-color: #f0f0f0; padding: 16px 24px; text-align: center;'>
+            <p style='color: #999999; font-size: 11px; margin: 0;'>
+                © {DateTime.Now.Year} Barbería El Corte · Todos los derechos reservados
+            </p>
+        </div>
+
+    </div>
+</div>";
+
+                    await _emailSender.SendEmailAsync(Input.Email, "Confirmá tu cuenta - Barbería El Corte", htmlMessage);
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {

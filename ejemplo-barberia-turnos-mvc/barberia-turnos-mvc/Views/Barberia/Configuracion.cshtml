@@ -28,6 +28,24 @@
         <input asp-for="PorcentajeSeña" class="form-control" type="number" step="1" min="0" max="100" />
         <span asp-validation-for="PorcentajeSeña" class="text-danger"></span>
     </div>
+    <div class="form-group">
+        <label asp-for="MinutosEntreTurnos">Colchón entre turnos (minutos)</label>
+        <input asp-for="MinutosEntreTurnos" class="form-control" type="number" step="1" min="0" max="60" />
+        <span asp-validation-for="MinutosEntreTurnos" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="HoraApertura">Hora de apertura</label>
+        <input asp-for="HoraApertura" asp-format="{0:hh\:mm}" class="form-control" type="time" />
+        <span asp-validation-for="HoraApertura" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="HoraCierre">Hora de cierre</label>
+        <input asp-for="HoraCierre" asp-format="{0:hh\:mm}" class="form-control" type="time" />
+        <span asp-validation-for="HoraCierre" class="text-danger"></span>
+    </div>
+
+
+
 
     <button type="submit" class="btn-guardar">Guardar</button>
 </form>

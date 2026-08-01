@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MercadoPago.Config;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<BarberiaDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("BarberiaConnection")));
 builder.Services.AddScoped<TurnoValidacionService>();
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 
 builder.Services
@@ -32,7 +34,6 @@ builder.Services.ConfigureApplicationCookie(options =>
 MercadoPagoConfig.AccessToken = builder.Configuration["MercadoPago:AccessToken"];
 
 var app = builder.Build();
-
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

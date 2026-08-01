@@ -25,7 +25,7 @@ namespace barberia_turnos_mvc.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Configuracion([Bind("Id,Nombre,Direccion,Telefono,PorcentajeSeña")] Barberia barberia)
+        public async Task<IActionResult> Configuracion([Bind("Id,Nombre,Direccion,Telefono,PorcentajeSeña,MinutosEntreTurnos,HoraApertura,HoraCierre")] Barberia barberia)
         {
             if (ModelState.IsValid)
             {

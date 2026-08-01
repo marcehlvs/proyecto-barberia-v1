@@ -73,5 +73,76 @@ namespace barberia_turnos_mvc.Services
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task<List<(TimeSpan Hora, bool Disponible)>> GenerarHorariosDelDia(DateTime fecha, int servicioId)
+        {
+            await ExpirarTurnosVencidosAsync();
+
+            var barberia = await _context.Barberias.FirstOrDefaultAsync();
+            var servicio = await _context.Servicios.FindAsync(servicioId);
+            if (barberia == null || servicio == null) return new List<(TimeSpan, bool)>();
+
+            var colchon = barberia.MinutosEntreTurnos;
+            var duracion = servicio.DuracionMinutos;
+
+            var inicioDelDia = fecha.Date;
+
+            var turnosDelDia = await _context.Turnos
+                .Include(t => t.Servicio)
+                .Where(t => t.FechaHora.Date == fecha.Date
+                    && t.Estado != EstadoTurno.Cancelado
+                    && t.Estado != EstadoTurno.NoShow)
+                .ToListAsync();
+
+            var bloqueosDelDia = await _context.BloqueoHorarios
+                .Where(b => b.FechaInicio.Date <= fecha.Date && b.FechaFin.Date >= fecha.Date)
+                .ToListAsync();
+
+            var resultado = new List<(TimeSpan, bool)>();
+
+            for (var hora = barberia.HoraApertura; hora < barberia.HoraCierre; hora = hora.Add(TimeSpan.FromMinutes(5)))
+            {
+                var inicioSlot = inicioDelDia.Add(hora);
+                var finSlot = inicioSlot.AddMinutes(duracion);
+
+                // El servicio tiene que terminar antes del cierre
+                if (finSlot.TimeOfDay > barberia.HoraCierre) continue;
+
+                // No mostrar horarios pasados si es hoy
+                if (inicioSlot < DateTime.Now) continue;
+
+                var disponible = true;
+
+                foreach (var turno in turnosDelDia)
+                {
+                    var inicioExistenteConColchon = turno.FechaHora.AddMinutes(-colchon);
+                    var finExistenteConColchon = turno.FechaHora.AddMinutes(turno.Servicio.DuracionMinutos + colchon);
+
+                    if (inicioSlot < finExistenteConColchon && inicioExistenteConColchon < finSlot)
+                    {
+                        disponible = false;
+                        break;
+                    }
+                }
+
+                if (disponible)
+                {
+                    foreach (var bloqueo in bloqueosDelDia)
+                    {
+                        if (inicioSlot < bloqueo.FechaFin && bloqueo.FechaInicio < finSlot)
+                        {
+                            disponible = false;
+                            break;
+                        }
+                    }
+                }
+
+                resultado.Add((hora, disponible));
+            }
+
+            return resultado;
+        }
+
+
+
     }
 }

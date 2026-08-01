@@ -16,5 +16,12 @@ namespace barberia_turnos_mvc.Models
    public ICollection<Servicio> Servicios { get; set; } = new List<Servicio>();
    public ICollection<Turno> Turnos { get; set; } = new List<Turno>();
    public ICollection<BloqueoHorario> Bloqueos { get; set; } = new List<BloqueoHorario>();
-  }
+
+   [Range(0, 60, ErrorMessage = "El colchón debe estar entre 0 y 60 minutos.")]
+   public int MinutosEntreTurnos { get; set; } = 10;
+
+   public TimeSpan HoraApertura { get; set; } = new TimeSpan(10, 0, 0);
+   public TimeSpan HoraCierre { get; set; } = new TimeSpan(20, 0, 0);
+
+    }
 }

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\bejar\\Desktop\\C# nivel 4\\ejemplo-barberia-turnos-mvc\\barberia-turnos-mvc\\barberia-turnos-mvc.csproj": {}
+    "C:\\Users\\bejar\\Desktop\\proyecto-barberia-v1\\ejemplo-barberia-turnos-mvc\\barberia-turnos-mvc\\barberia-turnos-mvc.csproj": {}
   },
   "projects": {
-    "C:\\Users\\bejar\\Desktop\\C# nivel 4\\ejemplo-barberia-turnos-mvc\\barberia-turnos-mvc\\barberia-turnos-mvc.csproj": {
+    "C:\\Users\\bejar\\Desktop\\proyecto-barberia-v1\\ejemplo-barberia-turnos-mvc\\barberia-turnos-mvc\\barberia-turnos-mvc.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\bejar\\Desktop\\C# nivel 4\\ejemplo-barberia-turnos-mvc\\barberia-turnos-mvc\\barberia-turnos-mvc.csproj",
+        "projectUniqueName": "C:\\Users\\bejar\\Desktop\\proyecto-barberia-v1\\ejemplo-barberia-turnos-mvc\\barberia-turnos-mvc\\barberia-turnos-mvc.csproj",
         "projectName": "barberia-turnos-mvc",
-        "projectPath": "C:\\Users\\bejar\\Desktop\\C# nivel 4\\ejemplo-barberia-turnos-mvc\\barberia-turnos-mvc\\barberia-turnos-mvc.csproj",
+        "projectPath": "C:\\Users\\bejar\\Desktop\\proyecto-barberia-v1\\ejemplo-barberia-turnos-mvc\\barberia-turnos-mvc\\barberia-turnos-mvc.csproj",
         "packagesPath": "C:\\Users\\bejar\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\bejar\\Desktop\\C# nivel 4\\ejemplo-barberia-turnos-mvc\\barberia-turnos-mvc\\obj\\",
+        "outputPath": "C:\\Users\\bejar\\Desktop\\proyecto-barberia-v1\\ejemplo-barberia-turnos-mvc\\barberia-turnos-mvc\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -52,6 +52,10 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "dependencies": {
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.17.0, )"
+            },
             "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
               "target": "Package",
               "version": "[10.0.10, )"

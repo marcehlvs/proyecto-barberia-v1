@@ -1,4 +1,6 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
     ViewData["Title"] = "Reservar Turno";
 }
 
@@ -6,21 +8,72 @@
 
 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-<form asp-action="Reservar">
-    <div class="form-group">
-        <label>Fecha y hora</label>
-        <input type="datetime-local" name="fechaHora" class="form-control" step="300" required />
-    </div>
+<form asp-action="Reservar" id="formReserva">
     <div class="form-group">
         <label>Servicio</label>
-        <select name="servicioId" class="form-control" asp-items="@(ViewData["ServicioId"] as SelectList)"></select>
+        <select name="servicioId" id="servicioId" class="form-control" asp-items="@(ViewData["ServicioId"] as SelectList)"></select>
     </div>
 
-    <button type="submit" class="btn-guardar">Reservar</button>
-</form>
+    <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="fecha" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+    </div>
 
-<a asp-action="MisTurnos" class="btn-volver-listado">Volver a Mis Turnos</a>
+    <div class="grilla-horarios" id="grillaHorarios">
+        <p>Elegí un servicio y una fecha para ver los horarios disponibles.</p>
+    </div>
+
+    <input type="hidden" name="fechaHora" id="fechaHoraSeleccionada" />
+
+    <button type="submit" class="btn-guardar mt-3" id="btnReservar" disabled>Reservar</button>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        const servicioSelect = document.getElementById('servicioId');
+        const fechaInput = document.getElementById('fecha');
+        const grilla = document.getElementById('grillaHorarios');
+        const inputOculto = document.getElementById('fechaHoraSeleccionada');
+        const btnReservar = document.getElementById('btnReservar');
+
+        async function cargarHorarios() {
+            const servicioId = servicioSelect.value;
+            const fecha = fechaInput.value;
+            if (!servicioId || !fecha) return;
+
+            grilla.innerHTML = '<p>Cargando horarios...</p>';
+            btnReservar.disabled = true;
+
+            const resp = await fetch(`/MiCuenta/HorariosDisponibles?fecha=${fecha}&servicioId=${servicioId}`);
+            const horarios = await resp.json();
+
+            if (horarios.length === 0) {
+                grilla.innerHTML = '<p>No hay horarios para este día.</p>';
+                return;
+            }
+
+            grilla.innerHTML = '';
+            horarios.forEach(h => {
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                boton.textContent = h.hora;
+                boton.className = h.disponible ? 'slot-disponible' : 'slot-ocupado';
+                boton.disabled = !h.disponible;
+
+                boton.addEventListener('click', () => {
+                    document.querySelectorAll('.slot-disponible.seleccionado')
+                        .forEach(b => b.classList.remove('seleccionado'));
+                    boton.classList.add('seleccionado');
+                    inputOculto.value = `${fecha}T${h.hora}`;
+                    btnReservar.disabled = false;
+                });
+
+                grilla.appendChild(boton);
+            });
+        }
+
+        servicioSelect.addEventListener('change', cargarHorarios);
+        fechaInput.addEventListener('change', cargarHorarios);
+    </script>
 }

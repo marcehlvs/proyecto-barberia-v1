@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using barberia_turnos_mvc.Data;
 
@@ -11,9 +12,11 @@ using barberia_turnos_mvc.Data;
 namespace barberia_turnos_mvc.Migrations
 {
     [DbContext(typeof(BarberiaDbContext))]
-    partial class BarberiaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260731220434_AgregarColchonYHorarios")]
+    partial class AgregarColchonYHorarios
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -238,15 +241,6 @@ namespace barberia_turnos_mvc.Migrations
                     b.Property<string>("Direccion")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<TimeSpan>("HoraApertura")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan>("HoraCierre")
-                        .HasColumnType("time");
-
-                    b.Property<int>("MinutosEntreTurnos")
-                        .HasColumnType("int");
 
                     b.Property<string>("Nombre")
                         .IsRequired()

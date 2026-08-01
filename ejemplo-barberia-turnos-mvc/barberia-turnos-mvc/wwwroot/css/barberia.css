@@ -821,3 +821,48 @@ body {
         margin-top: 1rem;
         display: inline-block;
     }
+
+.grilla-horarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.slot-disponible, .slot-ocupado {
+    padding: 0.5rem;
+    border-radius: 3px;
+    border: 1px solid;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.slot-disponible {
+    background-color: rgba(95, 130, 137, 0.15);
+    border-color: #5f8289;
+    color: #8fb3ba;
+}
+
+    .slot-disponible:hover {
+        background-color: #5f8289;
+        color: var(--ivory);
+    }
+
+    .slot-disponible.seleccionado {
+        background-color: var(--brass);
+        border-color: var(--brass);
+        color: var(--bg);
+        font-weight: 600;
+    }
+
+.slot-ocupado {
+    background-color: rgba(194, 92, 92, 0.1);
+    border-color: #c25c5c;
+    color: #c25c5c;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.grilla-horarios p {
+    grid-column: 1 / -1;
+}
