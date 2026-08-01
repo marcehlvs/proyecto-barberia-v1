@@ -65,7 +65,8 @@ wwwroot\lib\jquery\LICENSE.txt
 wwwroot\media\detalle-poste.jpg
 wwwroot\media\hero-barberia.mp4
 wwwroot\media\hero-interior.jpg
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\css\barberia.css
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\lib\jquery\dist\jquery.slim.min.map
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\lib\jquery\LICENSE.txt
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\css\site.css
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\favicon.ico
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\js\site.js
@@ -126,5 +127,4 @@ C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\lib\jquery\dist\jquery.min.map
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\lib\jquery\dist\jquery.slim.js
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\lib\jquery\dist\jquery.slim.min.js
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\lib\jquery\dist\jquery.slim.min.map
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\lib\jquery\LICENSE.txt
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\wwwroot\css\barberia.css
