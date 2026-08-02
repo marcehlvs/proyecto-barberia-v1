@@ -21,7 +21,6 @@ using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using barberia_turnos_mvc.Data;
-using barberia_turnos_mvc.Models;
 using barberia_turnos_mvc.Services;
 
 namespace barberia_turnos_mvc.Areas.Identity.Pages.Account

@@ -1,5 +1,3 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
 using Microsoft.AspNetCore.Authorization;
@@ -9,11 +7,11 @@ using barberia_turnos_mvc.Services;
 namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
-    public class ForgotPasswordConfirmation : PageModel
+    public class ResetPasswordConfirmationModel : PageModel
     {
         private readonly ICurrentBarberiaService _currentBarberia;
 
-        public ForgotPasswordConfirmation(ICurrentBarberiaService currentBarberia)
+        public ResetPasswordConfirmationModel(ICurrentBarberiaService currentBarberia)
         {
             _currentBarberia = currentBarberia;
         }

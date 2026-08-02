@@ -27,7 +27,7 @@
         }
         else
         {
-            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-reservar">Reservar turno</a>
+            <a asp-area="Identity" asp-page="/Account/Register" asp-route-barberia="@Model?.Slug" class="btn btn-reservar">Reservar turno</a>
         }
     </div>
 </section>
