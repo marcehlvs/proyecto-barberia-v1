@@ -47,7 +47,7 @@ else
                                 <span class="badge-estado badge-pendiente">Pendiente ($@turno.MontoSeña)</span>
                             }
                         </td>
-                        
+                        <td>
                             @if (!turno.SeñaPagada
                                 && turno.MontoSeña != null
                                 && turno.Estado != EstadoTurno.Cancelado)
@@ -55,9 +55,8 @@ else
                                 <div class="acciones-tabla">
                                     <a asp-controller="Pagos" asp-action="IniciarPago" asp-route-turnoId="@turno.Id" class="btn btn-editar">Reintentar pago</a>
                                 </div>
-                       
                             }
-                        
+                        </td>
                     </tr>
                 }
             </tbody>

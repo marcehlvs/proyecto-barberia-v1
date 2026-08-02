@@ -91,6 +91,11 @@ namespace barberia_turnos_mvc.Controllers
             var userId = _userManager.GetUserId(User);
             var barberiaId = _currentBarberia.GetRequerida().Id;
 
+            // Antes de mostrar la lista, barremos los turnos que quedaron
+            // pendientes de pago y ya vencieron, para que el estado que ve
+            // el cliente esté al día (igual que en TurnoController.Index).
+            await _validacionService.ExpirarTurnosVencidosAsync();
+
             var cliente = await _context.Clientes
                 .Include(c => c.Turnos)
                     .ThenInclude(t => t.Servicio)

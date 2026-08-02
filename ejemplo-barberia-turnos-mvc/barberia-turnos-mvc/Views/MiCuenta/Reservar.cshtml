@@ -19,7 +19,7 @@
         <input type="date" id="fecha" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
     </div>
 
-    <div class="grilla-horarios" id="grillaHorarios">
+    <div class="grilla-horarios" id="grillaHorarios" data-url="@Url.Action("HorariosDisponibles")">
         <p>Elegí un servicio y una fecha para ver los horarios disponibles.</p>
     </div>
 
@@ -37,6 +37,8 @@
         const inputOculto = document.getElementById('fechaHoraSeleccionada');
         const btnReservar = document.getElementById('btnReservar');
 
+        const urlBase = grilla.dataset.url;
+
         async function cargarHorarios() {
             const servicioId = servicioSelect.value;
             const fecha = fechaInput.value;
@@ -45,8 +47,18 @@
             grilla.innerHTML = '<p>Cargando horarios...</p>';
             btnReservar.disabled = true;
 
-            const resp = await fetch(`/MiCuenta/HorariosDisponibles?fecha=${fecha}&servicioId=${servicioId}`);
-            const horarios = await resp.json();
+            let horarios;
+            try {
+                const resp = await fetch(`${urlBase}?fecha=${fecha}&servicioId=${servicioId}`);
+                if (!resp.ok) {
+                    grilla.innerHTML = '<p>Ocurrió un error al cargar los horarios. Probá de nuevo.</p>';
+                    return;
+                }
+                horarios = await resp.json();
+            } catch (e) {
+                grilla.innerHTML = '<p>Ocurrió un error al cargar los horarios. Probá de nuevo.</p>';
+                return;
+            }
 
             if (horarios.length === 0) {
                 grilla.innerHTML = '<p>No hay horarios para este día.</p>';

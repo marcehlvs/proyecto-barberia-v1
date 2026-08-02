@@ -27,6 +27,7 @@ namespace barberia_turnos_mvc.Controllers
         {
             var turno = await _context.Turnos
                 .Include(t => t.Servicio)
+                .Include(t => t.Barberia)
                 .FirstOrDefaultAsync(t => t.Id == turnoId);
 
             if (turno == null) return NotFound();
@@ -36,6 +37,12 @@ namespace barberia_turnos_mvc.Controllers
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var notificationBase = _config["MercadoPago:NotificationUrlBase"] ?? baseUrl;
             var notificationUrlFinal = $"{notificationBase}/Pagos/Notificacion";
+
+            // Las BackUrls tienen que incluir el slug de la barbería: la ruta
+            // convencional de la app exige {barberiaSlug}/{controller}/{action},
+            // así que sin el slug Mercado Pago redirige a una URL que no matchea
+            // ningún controller real (ver bug de /Pagos/Exito -> 404).
+            var slug = turno.Barberia.Slug;
 
             var request = new PreferenceRequest
             {
@@ -51,9 +58,9 @@ namespace barberia_turnos_mvc.Controllers
                 },
                 BackUrls = new PreferenceBackUrlsRequest
                 {
-                    Success = $"{baseUrl}/Pagos/Exito",
-                    Failure = $"{baseUrl}/Pagos/Fallo",
-                    Pending = $"{baseUrl}/Pagos/Pendiente"
+                    Success = $"{baseUrl}/{slug}/Pagos/Exito",
+                    Failure = $"{baseUrl}/{slug}/Pagos/Fallo",
+                    Pending = $"{baseUrl}/{slug}/Pagos/Pendiente"
                 },
                 AutoReturn = "approved",
                 NotificationUrl = notificationUrlFinal,
