@@ -1,5 +1,6 @@
-﻿using barberia_turnos_mvc.Data;
+using barberia_turnos_mvc.Data;
 using barberia_turnos_mvc.Models;
+using barberia_turnos_mvc.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,15 +11,18 @@ namespace barberia_turnos_mvc.Controllers
     public class BarberiaController : Controller
     {
         private readonly BarberiaDbContext _context;
+        private readonly ICurrentBarberiaService _currentBarberia;
 
-        public BarberiaController(BarberiaDbContext context)
+        public BarberiaController(BarberiaDbContext context, ICurrentBarberiaService currentBarberia)
         {
             _context = context;
+            _currentBarberia = currentBarberia;
         }
 
         public async Task<IActionResult> Configuracion()
         {
-            var barberia = await _context.Barberias.FirstOrDefaultAsync();
+            var barberiaId = _currentBarberia.GetRequerida().Id;
+            var barberia = await _context.Barberias.FirstOrDefaultAsync(b => b.Id == barberiaId);
             if (barberia == null) return NotFound();
             return View(barberia);
         }
@@ -27,6 +31,18 @@ namespace barberia_turnos_mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Configuracion([Bind("Id,Nombre,Direccion,Telefono,PorcentajeSeña,MinutosEntreTurnos,HoraApertura,HoraCierre")] Barberia barberia)
         {
+            var barberiaId = _currentBarberia.GetRequerida().Id;
+
+            // Que el Dueño solo pueda editar SU PROPIA barbería, nunca otra por ID a mano.
+            if (barberia.Id != barberiaId)
+            {
+                return Forbid();
+            }
+
+            // El Slug no se toca desde este formulario (no está en el Bind),
+            // así que lo tenemos que reasignar antes de guardar o EF lo pisaría con vacío.
+            barberia.Slug = (await _context.Barberias.AsNoTracking().FirstOrDefaultAsync(b => b.Id == barberiaId))?.Slug ?? barberia.Slug;
+
             if (ModelState.IsValid)
             {
                 _context.Update(barberia);

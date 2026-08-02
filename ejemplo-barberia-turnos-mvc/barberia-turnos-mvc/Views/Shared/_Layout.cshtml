@@ -26,7 +26,7 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index" asp-route-barberiaSlug="@CurrentBarberia.Barberia?.Slug">Barbería El Corte</a>
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index" asp-route-barberiaSlug="@CurrentBarberia.Barberia?.Slug">@(CurrentBarberia.Barberia?.Nombre ?? "Turnos Online")</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>

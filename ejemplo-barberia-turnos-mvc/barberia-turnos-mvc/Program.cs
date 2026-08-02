@@ -81,7 +81,14 @@ app.MapGet("/", async (BarberiaDbContext db) =>
         : Results.Redirect($"/{primeraBarberia.Slug}");
 });
 
-// Cualquier otra ruta de 2+ segmentos exige el slug de la barbería primero.
+// Home/Error y Home/AccesoDenegado ya no se registran acá: son rutas fijas
+// con [Route] puesto directamente en HomeController, para que nunca compitan
+// con la generación de links normales de Home/Index (que sí necesitan el
+// slug de la barbería en el path). Antes, una ruta convencional genérica
+// "Home/{action}/{statusCode?}" registrada acá matcheaba CUALQUIER acción
+// de Home (incluyendo Index), y por estar registrada antes que "barberia"
+// terminaba generando links tipo /Home/Index?barberiaSlug=elcorte en vez
+// de /elcorte/Home/Index, rompiendo CurrentBarberiaMiddleware.
 app.MapControllerRoute(
     name: "barberia",
     pattern: "{barberiaSlug}/{controller=Home}/{action=Index}/{id?}")

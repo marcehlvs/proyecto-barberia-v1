@@ -13,7 +13,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using barberia_turnos_mvc.Data;
 using barberia_turnos_mvc.Services;
 
 namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
@@ -23,12 +25,14 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly ICurrentBarberiaService _currentBarberia;
+        private readonly BarberiaDbContext _context;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, ICurrentBarberiaService currentBarberia)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, ICurrentBarberiaService currentBarberia, BarberiaDbContext context)
         {
             _signInManager = signInManager;
             _logger = logger;
             _currentBarberia = currentBarberia;
+            _context = context;
         }
 
         // Slug de la barbería desde la que se entró a este login, para retenerlo
@@ -123,6 +127,25 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+
+                    // Si no vino de un link protegido específico (returnUrl genérico = la raíz),
+                    // y es un Dueño, lo mandamos directo a SU panel en vez de la raíz genérica.
+                    if (returnUrl == Url.Content("~/"))
+                    {
+                        var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
+                        if (user != null && user.BarberiaId.HasValue && await _signInManager.UserManager.IsInRoleAsync(user, "Dueño"))
+                        {
+                            var barberiaDelDueno = await _context.Barberias
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(b => b.Id == user.BarberiaId.Value);
+
+                            if (barberiaDelDueno != null)
+                            {
+                                return LocalRedirect($"/{barberiaDelDueno.Slug}/Dashboard");
+                            }
+                        }
+                    }
+
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
