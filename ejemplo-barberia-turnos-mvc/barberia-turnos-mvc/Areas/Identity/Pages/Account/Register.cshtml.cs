@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using barberia_turnos_mvc.Data;
 using barberia_turnos_mvc.Models;
+using barberia_turnos_mvc.Services;
 
 namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 {
@@ -34,6 +35,7 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
         private readonly BarberiaDbContext _context;
+        private readonly ICurrentBarberiaService _currentBarberia;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
@@ -41,7 +43,8 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender,
-            BarberiaDbContext context)
+            BarberiaDbContext context,
+            ICurrentBarberiaService currentBarberia)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -50,7 +53,13 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
             _logger = logger;
             _emailSender = emailSender;
             _context = context;
+            _currentBarberia = currentBarberia;
         }
+
+        // Slug de la barbería para la que se está registrando este cliente.
+        // Viaja por query string (?barberia=elcorte) y se re-envía en el POST
+        // vía asp-route-barberia en el <form> de Register.cshtml.
+        public string BarberiaSlug { get; set; }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -111,12 +120,22 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            BarberiaSlug = _currentBarberia.Barberia?.Slug;
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            var barberia = _currentBarberia.Barberia;
+            if (barberia is null)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "No pudimos identificar la barbería para este registro. Volvé a intentar desde el link de tu barbería.");
+                return Page();
+            }
+
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
@@ -134,13 +153,14 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                     // Asignar rol Cliente automáticamente
                     await _userManager.AddToRoleAsync(user, "Cliente");
 
-                    // Crear el registro de Cliente vinculado a este usuario
+                    // Crear el registro de Cliente vinculado a este usuario Y a esta barbería
                     var cliente = new Cliente
                     {
                         Nombre = Input.Email!.Split('@')[0], // provisorio, lo ajusta después en su perfil
                         Apellido = "",
                         Telefono = "",
-                        ApplicationUserId = user.Id
+                        ApplicationUserId = user.Id,
+                        BarberiaId = barberia.Id
                     };
                     _context.Clientes.Add(cliente);
                     await _context.SaveChangesAsync();
@@ -164,7 +184,7 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 
         <div style='background-color: #1a1a1a; padding: 32px 24px; text-align: center;'>
             <h1 style='color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;'>
-                💈 BARBERÍA EL CORTE
+                💈 {barberia.Nombre.ToUpper()}
             </h1>
         </div>
 
@@ -173,7 +193,7 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                 ¡Bienvenido!
             </h2>
             <p style='color: #444444; font-size: 15px; line-height: 1.6;'>
-                Gracias por registrarte en <strong>Barbería El Corte</strong>. Para empezar a reservar tus turnos, primero necesitamos que confirmes tu dirección de email.
+                Gracias por registrarte en <strong>{barberia.Nombre}</strong>. Para empezar a reservar tus turnos, primero necesitamos que confirmes tu dirección de email.
             </p>
 
             <div style='text-align: center; margin: 32px 0;'>
@@ -197,14 +217,14 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 
         <div style='background-color: #f0f0f0; padding: 16px 24px; text-align: center;'>
             <p style='color: #999999; font-size: 11px; margin: 0;'>
-                © {DateTime.Now.Year} Barbería El Corte · Todos los derechos reservados
+                © {DateTime.Now.Year} {barberia.Nombre} · Todos los derechos reservados
             </p>
         </div>
 
     </div>
 </div>";
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirmá tu cuenta - Barbería El Corte", htmlMessage);
+                    await _emailSender.SendEmailAsync(Input.Email, $"Confirmá tu cuenta - {barberia.Nombre}", htmlMessage);
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {

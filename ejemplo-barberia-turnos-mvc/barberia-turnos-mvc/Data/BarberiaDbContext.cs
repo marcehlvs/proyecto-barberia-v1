@@ -45,6 +45,28 @@ namespace barberia_turnos_mvc.Data
                 .HasForeignKey(t => t.ServicioId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Barberia>()
+                .HasIndex(b => b.Slug)
+                .IsUnique();
+
+            modelBuilder.Entity<Cliente>()
+                .HasOne(c => c.Barberia)
+                .WithMany(b => b.Clientes)
+                .HasForeignKey(c => c.BarberiaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Mismo teléfono puede existir en distintas barberías,
+            // pero no puede repetirse DENTRO de la misma barbería.
+            modelBuilder.Entity<Cliente>()
+                .HasIndex(c => new { c.BarberiaId, c.Telefono })
+                .IsUnique();
+
+            modelBuilder.Entity<ApplicationUser>()
+                .HasOne(u => u.Barberia)
+                .WithMany()
+                .HasForeignKey(u => u.BarberiaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             base.OnModelCreating(modelBuilder);
         }
 

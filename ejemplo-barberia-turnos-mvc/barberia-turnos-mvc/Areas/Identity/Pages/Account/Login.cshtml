@@ -10,7 +10,7 @@
 
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    <form method="post">
+    <form method="post" asp-route-barberia="@Model.BarberiaSlug">
         <input asp-for="ReturnUrl" hidden />
 
         <div class="form-floating mb-3">
@@ -36,7 +36,7 @@
             <a id="forgot-password" asp-page="./ForgotPassword">¿Olvidaste tu contraseña?</a>
         </div>
         <div class="mt-2 text-center">
-            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">¿No tenés cuenta? Registrate</a>
+            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" asp-route-barberia="@Model.BarberiaSlug">¿No tenés cuenta? Registrate</a>
         </div>
     </form>
 </div>

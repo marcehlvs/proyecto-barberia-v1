@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using barberia_turnos_mvc.Services;
 
 namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 {
@@ -21,12 +22,18 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly ICurrentBarberiaService _currentBarberia;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, ICurrentBarberiaService currentBarberia)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _currentBarberia = currentBarberia;
         }
+
+        // Slug de la barbería desde la que se entró a este login, para retenerlo
+        // en el link "Registrate" y en el propio POST.
+        public string BarberiaSlug { get; set; }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -99,6 +106,7 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
             ReturnUrl = returnUrl;
+            BarberiaSlug = _currentBarberia.Barberia?.Slug;
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)

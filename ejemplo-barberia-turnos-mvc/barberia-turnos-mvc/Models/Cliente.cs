@@ -22,6 +22,10 @@ namespace barberia_turnos_mvc.Models
         [ValidateNever]
         public ApplicationUser? ApplicationUser { get; set; }
 
+        public int BarberiaId { get; set; }
+        [ValidateNever]
+        public Barberia Barberia { get; set; } = null!;
+
         [NotMapped]
         public string NombreCompleto => $"{Nombre} {Apellido}";
         public ICollection<Turno> Turnos { get; set; } = new List<Turno>();

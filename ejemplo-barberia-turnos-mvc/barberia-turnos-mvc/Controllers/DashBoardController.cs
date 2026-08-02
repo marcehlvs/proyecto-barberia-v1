@@ -12,17 +12,19 @@ namespace barberia_turnos_mvc.Controllers
     {
         private readonly BarberiaDbContext _context;
         private readonly TurnoValidacionService _validacionService;
+        private readonly ICurrentBarberiaService _currentBarberia;
 
-
-
-        public DashboardController(BarberiaDbContext context, TurnoValidacionService turnoValidacionService)
+        public DashboardController(BarberiaDbContext context, TurnoValidacionService turnoValidacionService, ICurrentBarberiaService currentBarberia)
         {
             _context = context;
             _validacionService = turnoValidacionService;
+            _currentBarberia = currentBarberia;
         }
 
         public async Task<IActionResult> Index()
         {
+            var barberiaId = _currentBarberia.GetRequerida().Id;
+
             await _validacionService.ExpirarTurnosVencidosAsync();
             var hoy = DateTime.Today;
             var mananaInicio = hoy.AddDays(1);
@@ -30,6 +32,7 @@ namespace barberia_turnos_mvc.Controllers
             var turnosDeHoy = await _context.Turnos
                 .Include(t => t.Cliente)
                 .Include(t => t.Servicio)
+                .Where(t => t.BarberiaId == barberiaId)
                 .Where(t => t.FechaHora >= hoy && t.FechaHora < mananaInicio)
                 .OrderBy(t => t.FechaHora)
                 .ToListAsync();
@@ -38,12 +41,14 @@ namespace barberia_turnos_mvc.Controllers
             var primerDiaDelMesSiguiente = primerDiaDelMes.AddMonths(1);
 
             var ingresosDelMes = await _context.Turnos
+                .Where(t => t.BarberiaId == barberiaId)
                 .Where(t => t.SeñaPagada
                     && t.FechaHora >= primerDiaDelMes
                     && t.FechaHora < primerDiaDelMesSiguiente)
                 .SumAsync(t => t.MontoSeña ?? 0);
 
             var turnosPendientesDePago = await _context.Turnos
+                .Where(t => t.BarberiaId == barberiaId)
                 .CountAsync(t => !t.SeñaPagada && t.Estado == EstadoTurno.Pendiente);
 
             var modelo = new DashboardViewModel

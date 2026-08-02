@@ -1,6 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using barberia_turnos_mvc.Services
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
+@inject ICurrentBarberiaService CurrentBarberia
 
 
 <!DOCTYPE html>
@@ -22,14 +24,14 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-dark">
+        <nav class="navbar navbar-expand-lg navbar-dark">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">Barbería El Corte</a>
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index" asp-route-barberiaSlug="@CurrentBarberia.Barberia?.Slug">Barbería El Corte</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between flex-wrap">
+                    <ul class="navbar-nav flex-grow-1 flex-wrap">
                         @if (User.IsInRole("Dueño"))
                         {
                             <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index">Panel</a></li>

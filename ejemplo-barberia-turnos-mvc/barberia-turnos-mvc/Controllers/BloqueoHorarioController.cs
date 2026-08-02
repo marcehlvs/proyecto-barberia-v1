@@ -1,5 +1,6 @@
-﻿using barberia_turnos_mvc.Data;
+using barberia_turnos_mvc.Data;
 using barberia_turnos_mvc.Models;
+using barberia_turnos_mvc.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,16 +11,20 @@ namespace barberia_turnos_mvc.Controllers
     public class BloqueoHorarioController : Controller
     {
         private readonly BarberiaDbContext _context;
+        private readonly ICurrentBarberiaService _currentBarberia;
 
-        public BloqueoHorarioController(BarberiaDbContext context)
+        public BloqueoHorarioController(BarberiaDbContext context, ICurrentBarberiaService currentBarberia)
         {
             _context = context;
+            _currentBarberia = currentBarberia;
         }
 
         public async Task<IActionResult> Index()
         {
+            var barberiaId = _currentBarberia.GetRequerida().Id;
             var bloqueos = await _context.BloqueoHorarios
                 .Include(b => b.Barberia)
+                .Where(b => b.BarberiaId == barberiaId)
                 .OrderBy(b => b.FechaInicio)
                 .ToListAsync();
             return View(bloqueos);
@@ -28,10 +33,11 @@ namespace barberia_turnos_mvc.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
+            var barberiaId = _currentBarberia.GetRequerida().Id;
 
             var bloqueo = await _context.BloqueoHorarios
                 .Include(b => b.Barberia)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.BarberiaId == barberiaId);
 
             if (bloqueo == null) return NotFound();
             return View(bloqueo);
@@ -51,16 +57,10 @@ namespace barberia_turnos_mvc.Controllers
                 ModelState.AddModelError("", "La fecha de fin debe ser posterior a la fecha de inicio.");
             }
 
+            bloqueo.BarberiaId = _currentBarberia.GetRequerida().Id;
+
             if (ModelState.IsValid)
             {
-                var barberia = await _context.Barberias.FirstOrDefaultAsync();
-                if (barberia == null)
-                {
-                    ModelState.AddModelError("", "No hay ninguna barbería cargada todavía.");
-                    return View(bloqueo);
-                }
-
-                bloqueo.BarberiaId = barberia.Id;
                 _context.Add(bloqueo);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -71,8 +71,9 @@ namespace barberia_turnos_mvc.Controllers
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
+            var barberiaId = _currentBarberia.GetRequerida().Id;
 
-            var bloqueo = await _context.BloqueoHorarios.FindAsync(id);
+            var bloqueo = await _context.BloqueoHorarios.FirstOrDefaultAsync(b => b.Id == id && b.BarberiaId == barberiaId);
             if (bloqueo == null) return NotFound();
             return View(bloqueo);
         }
@@ -82,11 +83,19 @@ namespace barberia_turnos_mvc.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("Id,FechaInicio,FechaFin,Motivo,BarberiaId")] BloqueoHorario bloqueo)
         {
             if (id != bloqueo.Id) return NotFound();
+            var barberiaId = _currentBarberia.GetRequerida().Id;
+
+            var perteneceABarberia = await _context.BloqueoHorarios
+                .AsNoTracking()
+                .AnyAsync(b => b.Id == id && b.BarberiaId == barberiaId);
+            if (!perteneceABarberia) return NotFound();
 
             if (bloqueo.FechaFin <= bloqueo.FechaInicio)
             {
                 ModelState.AddModelError("", "La fecha de fin debe ser posterior a la fecha de inicio.");
             }
+
+            bloqueo.BarberiaId = barberiaId;
 
             if (ModelState.IsValid)
             {
@@ -97,7 +106,7 @@ namespace barberia_turnos_mvc.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!BloqueoExists(bloqueo.Id)) return NotFound();
+                    if (!BloqueoExists(bloqueo.Id, barberiaId)) return NotFound();
                     else throw;
                 }
                 return RedirectToAction(nameof(Index));
@@ -108,10 +117,11 @@ namespace barberia_turnos_mvc.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
+            var barberiaId = _currentBarberia.GetRequerida().Id;
 
             var bloqueo = await _context.BloqueoHorarios
                 .Include(b => b.Barberia)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.BarberiaId == barberiaId);
 
             if (bloqueo == null) return NotFound();
             return View(bloqueo);
@@ -121,7 +131,8 @@ namespace barberia_turnos_mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var bloqueo = await _context.BloqueoHorarios.FindAsync(id);
+            var barberiaId = _currentBarberia.GetRequerida().Id;
+            var bloqueo = await _context.BloqueoHorarios.FirstOrDefaultAsync(b => b.Id == id && b.BarberiaId == barberiaId);
             if (bloqueo != null)
             {
                 _context.BloqueoHorarios.Remove(bloqueo);
@@ -130,9 +141,9 @@ namespace barberia_turnos_mvc.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool BloqueoExists(int id)
+        private bool BloqueoExists(int id, int barberiaId)
         {
-            return _context.BloqueoHorarios.Any(e => e.Id == id);
+            return _context.BloqueoHorarios.Any(e => e.Id == id && e.BarberiaId == barberiaId);
         }
     }
 }

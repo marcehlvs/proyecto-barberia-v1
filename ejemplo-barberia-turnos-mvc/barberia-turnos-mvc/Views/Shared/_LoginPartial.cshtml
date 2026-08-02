@@ -1,7 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using barberia_turnos_mvc.Models
+@using barberia_turnos_mvc.Services
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
+@inject ICurrentBarberiaService CurrentBarberia
 
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
@@ -23,7 +25,7 @@
     else
     {
         <li class="nav-item">
-            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">Ingresar</a>
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login" asp-route-barberia="@CurrentBarberia.Barberia?.Slug">Ingresar</a>
         </li>
     }
 </ul>

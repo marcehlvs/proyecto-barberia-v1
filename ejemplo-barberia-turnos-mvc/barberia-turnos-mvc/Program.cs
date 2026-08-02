@@ -1,6 +1,7 @@
 using barberia_turnos_mvc.Data;
 using barberia_turnos_mvc.Helpers;
 using barberia_turnos_mvc.Services;
+using barberia_turnos_mvc.Middleware;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -14,6 +15,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<BarberiaDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("BarberiaConnection")));
 builder.Services.AddScoped<TurnoValidacionService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.AddScoped<CurrentBarberiaService>();
+builder.Services.AddScoped<ICurrentBarberiaService>(sp => sp.GetRequiredService<CurrentBarberiaService>());
 
 
 builder.Services
@@ -60,14 +63,28 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseMiddleware<CurrentBarberiaMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
 
+// Ruta raíz (sin slug): mientras exista una sola barbería, redirigimos directo a ella.
+// TODO: cuando haya más de una barbería, reemplazar esto por una landing real
+// (marketing del SaaS, o un selector de barberías).
+app.MapGet("/", async (BarberiaDbContext db) =>
+{
+    var primeraBarberia = await db.Barberias.OrderBy(b => b.Id).FirstOrDefaultAsync();
+    return primeraBarberia is null
+        ? Results.NotFound("Todavía no hay ninguna barbería cargada.")
+        : Results.Redirect($"/{primeraBarberia.Slug}");
+});
+
+// Cualquier otra ruta de 2+ segmentos exige el slug de la barbería primero.
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    name: "barberia",
+    pattern: "{barberiaSlug}/{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 app.MapRazorPages();

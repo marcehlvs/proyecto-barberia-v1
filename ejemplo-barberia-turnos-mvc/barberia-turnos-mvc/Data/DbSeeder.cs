@@ -19,7 +19,8 @@ namespace barberia_turnos_mvc.Data
             {
                 Nombre = "Barbería El Corte",
                 Direccion = "Av. Siempre Viva 123",
-                Telefono = "11-5555-0000"
+                Telefono = "11-5555-0000",
+                Slug = "elcorte"
             };
 
             context.Barberias.Add(barberia);
@@ -39,9 +40,9 @@ namespace barberia_turnos_mvc.Data
             // === Clientes ===
             var clientes = new List<Cliente>
             {
-                new Cliente { Nombre = "Marcelo", Apellido = "Gómez", Telefono = "11-1111-1111" },
-                new Cliente { Nombre = "Juan", Apellido = "Pérez", Telefono = "11-2222-2222" },
-                new Cliente { Nombre = "Lucía", Apellido = "Fernández", Telefono = "11-3333-3333" }
+                new Cliente { Nombre = "Marcelo", Apellido = "Gómez", Telefono = "11-1111-1111", BarberiaId = barberia.Id },
+                new Cliente { Nombre = "Juan", Apellido = "Pérez", Telefono = "11-2222-2222", BarberiaId = barberia.Id },
+                new Cliente { Nombre = "Lucía", Apellido = "Fernández", Telefono = "11-3333-3333", BarberiaId = barberia.Id }
             };
             context.Clientes.AddRange(clientes);
             context.SaveChanges(); // necesario para que cada Cliente.Id se genere
@@ -83,6 +84,7 @@ namespace barberia_turnos_mvc.Data
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var context = serviceProvider.GetRequiredService<BarberiaDbContext>();
 
             string[] roles = { "Dueño", "Cliente" };
 
@@ -99,12 +101,17 @@ namespace barberia_turnos_mvc.Data
 
             if (usuarioExistente == null)
             {
+                // TODO: cuando haya más de una barbería, esto va a venir del
+                // flujo de alta de un nuevo dueño, no de un FirstOrDefault fijo.
+                var barberia = context.Barberias.FirstOrDefault();
+
                 var dueno = new ApplicationUser
                 {
                     UserName = email,
                     Email = email,
                     NombreCompleto = "Marcelo (Dueño)",
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    BarberiaId = barberia?.Id
                 };
 
                 var resultado = await userManager.CreateAsync(dueno, "Barberia123!");

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using barberia_turnos_mvc.Data;
 
@@ -11,9 +12,11 @@ using barberia_turnos_mvc.Data;
 namespace barberia_turnos_mvc.Migrations
 {
     [DbContext(typeof(BarberiaDbContext))]
-    partial class BarberiaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260801212306_AgregarMultiTenant")]
+    partial class AgregarMultiTenant
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -261,19 +264,11 @@ namespace barberia_turnos_mvc.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)");
 
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
-
                     b.Property<string>("Telefono")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
 
                     b.ToTable("Barberias");
                 });

@@ -1,0 +1,118 @@
+diff --git a/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Data/BarberiaDbContext.cs b/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Data/BarberiaDbContext.cs
+index 7931e25..94aa748 100644
+--- a/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Data/BarberiaDbContext.cs
++++ b/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Data/BarberiaDbContext.cs
+@@ -45,6 +45,24 @@ namespace barberia_turnos_mvc.Data
+                 .HasForeignKey(t => t.ServicioId)
+                 .OnDelete(DeleteBehavior.Restrict);
+ 
++            modelBuilder.Entity<Cliente>()
++                .HasOne(c => c.Barberia)
++                .WithMany(b => b.Clientes)
++                .HasForeignKey(c => c.BarberiaId)
++                .OnDelete(DeleteBehavior.Restrict);
++
++            // Mismo teléfono puede existir en distintas barberías,
++            // pero no puede repetirse DENTRO de la misma barbería.
++            modelBuilder.Entity<Cliente>()
++                .HasIndex(c => new { c.BarberiaId, c.Telefono })
++                .IsUnique();
++
++            modelBuilder.Entity<ApplicationUser>()
++                .HasOne(u => u.Barberia)
++                .WithMany()
++                .HasForeignKey(u => u.BarberiaId)
++                .OnDelete(DeleteBehavior.Restrict);
++
+             base.OnModelCreating(modelBuilder);
+         }
+ 
+diff --git a/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Data/DbSeeder.cs b/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Data/DbSeeder.cs
+index 5f4b857..c10b698 100644
+--- a/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Data/DbSeeder.cs
++++ b/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Data/DbSeeder.cs
+@@ -39,9 +39,9 @@ namespace barberia_turnos_mvc.Data
+             // === Clientes ===
+             var clientes = new List<Cliente>
+             {
+-                new Cliente { Nombre = "Marcelo", Apellido = "Gómez", Telefono = "11-1111-1111" },
+-                new Cliente { Nombre = "Juan", Apellido = "Pérez", Telefono = "11-2222-2222" },
+-                new Cliente { Nombre = "Lucía", Apellido = "Fernández", Telefono = "11-3333-3333" }
++                new Cliente { Nombre = "Marcelo", Apellido = "Gómez", Telefono = "11-1111-1111", BarberiaId = barberia.Id },
++                new Cliente { Nombre = "Juan", Apellido = "Pérez", Telefono = "11-2222-2222", BarberiaId = barberia.Id },
++                new Cliente { Nombre = "Lucía", Apellido = "Fernández", Telefono = "11-3333-3333", BarberiaId = barberia.Id }
+             };
+             context.Clientes.AddRange(clientes);
+             context.SaveChanges(); // necesario para que cada Cliente.Id se genere
+@@ -83,6 +83,7 @@ namespace barberia_turnos_mvc.Data
+         {
+             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
++            var context = serviceProvider.GetRequiredService<BarberiaDbContext>();
+ 
+             string[] roles = { "Dueño", "Cliente" };
+ 
+@@ -99,12 +100,17 @@ namespace barberia_turnos_mvc.Data
+ 
+             if (usuarioExistente == null)
+             {
++                // TODO: cuando haya más de una barbería, esto va a venir del
++                // flujo de alta de un nuevo dueño, no de un FirstOrDefault fijo.
++                var barberia = context.Barberias.FirstOrDefault();
++
+                 var dueno = new ApplicationUser
+                 {
+                     UserName = email,
+                     Email = email,
+                     NombreCompleto = "Marcelo (Dueño)",
+-                    EmailConfirmed = true
++                    EmailConfirmed = true,
++                    BarberiaId = barberia?.Id
+                 };
+ 
+                 var resultado = await userManager.CreateAsync(dueno, "Barberia123!");
+diff --git a/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/ApplicationUser.cs b/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/ApplicationUser.cs
+index 101a22b..af6bfaf 100644
+--- a/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/ApplicationUser.cs
++++ b/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/ApplicationUser.cs
+@@ -1,6 +1,13 @@
+ ﻿using Microsoft.AspNetCore.Identity;
++using barberia_turnos_mvc.Models;
+ 
+ public class ApplicationUser : IdentityUser
+ {
+     public string? NombreCompleto { get; set; }
++
++    // Solo se usa para usuarios con rol "Dueño".
++    // Los usuarios con rol "Cliente" NO tienen barbería propia:
++    // su relación con una barbería específica vive en cada registro de Cliente.
++    public int? BarberiaId { get; set; }
++    public Barberia? Barberia { get; set; }
+ }
+diff --git a/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/Barberia.cs b/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/Barberia.cs
+index f296a1a..51296bf 100644
+--- a/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/Barberia.cs
++++ b/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/Barberia.cs
+@@ -16,6 +16,7 @@ namespace barberia_turnos_mvc.Models
+    public ICollection<Servicio> Servicios { get; set; } = new List<Servicio>();
+    public ICollection<Turno> Turnos { get; set; } = new List<Turno>();
+    public ICollection<BloqueoHorario> Bloqueos { get; set; } = new List<BloqueoHorario>();
++   public ICollection<Cliente> Clientes { get; set; } = new List<Cliente>();
+ 
+    [Range(0, 60, ErrorMessage = "El colchón debe estar entre 0 y 60 minutos.")]
+    public int MinutosEntreTurnos { get; set; } = 10;
+diff --git a/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/Cliente.cs b/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/Cliente.cs
+index 088ea33..8d0ad6f 100644
+--- a/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/Cliente.cs
++++ b/ejemplo-barberia-turnos-mvc/barberia-turnos-mvc/Models/Cliente.cs
+@@ -22,6 +22,10 @@ namespace barberia_turnos_mvc.Models
+         [ValidateNever]
+         public ApplicationUser? ApplicationUser { get; set; }
+ 
++        public int BarberiaId { get; set; }
++        [ValidateNever]
++        public Barberia Barberia { get; set; } = null!;
++
+         [NotMapped]
+         public string NombreCompleto => $"{Nombre} {Apellido}";
+         public ICollection<Turno> Turnos { get; set; } = new List<Turno>();

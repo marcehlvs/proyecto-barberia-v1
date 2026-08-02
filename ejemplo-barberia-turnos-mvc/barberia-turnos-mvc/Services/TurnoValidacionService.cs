@@ -1,4 +1,4 @@
-﻿using barberia_turnos_mvc.Data;
+using barberia_turnos_mvc.Data;
 using barberia_turnos_mvc.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,17 +7,22 @@ namespace barberia_turnos_mvc.Services
     public class TurnoValidacionService
     {
         private readonly BarberiaDbContext _context;
+        private readonly ICurrentBarberiaService _currentBarberia;
 
-        public TurnoValidacionService(BarberiaDbContext context)
+        public TurnoValidacionService(BarberiaDbContext context, ICurrentBarberiaService currentBarberia)
         {
             _context = context;
-            
+            _currentBarberia = currentBarberia;
         }
 
         public async Task<string?> ValidarDisponibilidad(DateTime fechaHora, int servicioId, int? turnoIdAExcluir = null)
         {
+            var barberiaId = _currentBarberia.GetRequerida().Id;
+
             await ExpirarTurnosVencidosAsync();
-            var servicio = await _context.Servicios.FindAsync(servicioId);
+
+            var servicio = await _context.Servicios
+                .FirstOrDefaultAsync(s => s.Id == servicioId && s.BarberiaId == barberiaId);
             if (servicio == null) return "El servicio seleccionado no existe.";
 
             var inicioNuevo = fechaHora;
@@ -25,6 +30,7 @@ namespace barberia_turnos_mvc.Services
 
             var turnosActivos = await _context.Turnos
                 .Include(t => t.Servicio)
+                .Where(t => t.BarberiaId == barberiaId)
                 .Where(t => t.Estado != EstadoTurno.Cancelado && t.Estado != EstadoTurno.NoShow)
                 .Where(t => turnoIdAExcluir == null || t.Id != turnoIdAExcluir)
                 .ToListAsync();
@@ -40,7 +46,9 @@ namespace barberia_turnos_mvc.Services
                 }
             }
 
-            var bloqueos = await _context.BloqueoHorarios.ToListAsync();
+            var bloqueos = await _context.BloqueoHorarios
+                .Where(b => b.BarberiaId == barberiaId)
+                .ToListAsync();
 
             foreach (var bloqueo in bloqueos)
             {
@@ -53,12 +61,14 @@ namespace barberia_turnos_mvc.Services
 
             return null;
         }
-        // Services/TurnoValidacionService.cs
+
         public async Task ExpirarTurnosVencidosAsync()
         {
+            var barberiaId = _currentBarberia.GetRequerida().Id;
             var limite = DateTime.Now.AddMinutes(-2);
 
             var turnosVencidos = await _context.Turnos
+                .Where(t => t.BarberiaId == barberiaId)
                 .Where(t => t.Estado == EstadoTurno.Pendiente
                     && !t.SeñaPagada
                     && t.FechaCreacion < limite)
@@ -73,12 +83,16 @@ namespace barberia_turnos_mvc.Services
                 await _context.SaveChangesAsync();
             }
         }
+
         public async Task<List<(TimeSpan Hora, bool Disponible)>> GenerarHorariosDelDia(DateTime fecha, int servicioId)
         {
+            var barberiaId = _currentBarberia.GetRequerida().Id;
+
             await ExpirarTurnosVencidosAsync();
 
-            var barberia = await _context.Barberias.FirstOrDefaultAsync();
-            var servicio = await _context.Servicios.FindAsync(servicioId);
+            var barberia = await _context.Barberias.FirstOrDefaultAsync(b => b.Id == barberiaId);
+            var servicio = await _context.Servicios
+                .FirstOrDefaultAsync(s => s.Id == servicioId && s.BarberiaId == barberiaId);
             if (barberia == null || servicio == null) return new List<(TimeSpan, bool)>();
 
             var colchon = barberia.MinutosEntreTurnos;
@@ -88,12 +102,14 @@ namespace barberia_turnos_mvc.Services
 
             var turnosDelDia = await _context.Turnos
                 .Include(t => t.Servicio)
+                .Where(t => t.BarberiaId == barberiaId)
                 .Where(t => t.FechaHora.Date == fecha.Date
                     && t.Estado != EstadoTurno.Cancelado
                     && t.Estado != EstadoTurno.NoShow)
                 .ToListAsync();
 
             var bloqueosDelDia = await _context.BloqueoHorarios
+                .Where(b => b.BarberiaId == barberiaId)
                 .Where(b => b.FechaInicio.Date <= fecha.Date && b.FechaFin.Date >= fecha.Date)
                 .ToListAsync();
 
@@ -104,10 +120,7 @@ namespace barberia_turnos_mvc.Services
                 var inicioSlot = inicioDelDia.Add(hora);
                 var finSlot = inicioSlot.AddMinutes(duracion);
 
-                // El servicio tiene que terminar antes del cierre
                 if (finSlot.TimeOfDay > barberia.HoraCierre) continue;
-
-                // No mostrar horarios pasados si es hoy
                 if (inicioSlot < DateTime.Now) continue;
 
                 var disponible = true;
@@ -141,8 +154,5 @@ namespace barberia_turnos_mvc.Services
 
             return resultado;
         }
-
-
-
     }
 }
