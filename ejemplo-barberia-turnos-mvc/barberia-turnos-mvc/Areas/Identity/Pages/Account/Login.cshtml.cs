@@ -1,4 +1,4 @@
-/// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
@@ -70,27 +70,31 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                 ModelState.AddModelError(string.Empty, ErrorMessage);
             }
 
-            returnUrl ??= Url.Content("~/");
-
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
-            ReturnUrl = returnUrl;
             BarberiaSlug = _currentBarberia.Barberia?.Slug;
+
+            // Si no vino un returnUrl específico (ej: no es un redirect desde
+            // una página protegida), el default es la home de ESTA barbería,
+            // no la raíz del sitio. Esto se calcula ACÁ, antes de que
+            // Login.cshtml lo vuelque en el <input asp-for="ReturnUrl" hidden />
+            // del formulario: si lo dejáramos en "~/" acá, ese valor quedaría
+            // "horneado" en el campo oculto y llegaría a OnPostAsync como si
+            // fuera un valor explícito, saltándose cualquier default que
+            // pongamos ahí.
+            returnUrl ??= !string.IsNullOrEmpty(BarberiaSlug) ? Url.Content($"~/{BarberiaSlug}") : Url.Content("~/");
+
+            ReturnUrl = returnUrl;
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            // Si no vino un returnUrl específico (ej: no venías de un link
-            // protegido), NO usamos la raíz genérica ("/") como destino: la
-            // raíz redirige siempre a la PRIMERA barbería de la base (ver
-            // Program.cs), lo que sacaría a un Cliente de "barberia-test" y
-            // lo mandaría a ver el home de "elcorte" después de loguearse.
-            var huboReturnUrlEspecifico = !string.IsNullOrEmpty(returnUrl);
             var slugActual = _currentBarberia.Barberia?.Slug;
-            returnUrl ??= !string.IsNullOrEmpty(slugActual) ? Url.Content($"~/{slugActual}") : Url.Content("~/");
+            var returnUrlGenerico = !string.IsNullOrEmpty(slugActual) ? Url.Content($"~/{slugActual}") : Url.Content("~/");
+            returnUrl ??= returnUrlGenerico;
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
@@ -103,9 +107,10 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User logged in.");
 
-                    // Sin returnUrl específico, y si es un Dueño, lo mandamos
+                    // Si el returnUrl es el genérico (no vino de un link a una
+                    // página protegida puntual), y es un Dueño, lo mandamos
                     // directo a SU panel en vez de a la home de la barbería.
-                    if (!huboReturnUrlEspecifico)
+                    if (returnUrl == returnUrlGenerico)
                     {
                         var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
                         if (user != null && user.BarberiaId.HasValue && await _signInManager.UserManager.IsInRoleAsync(user, "Dueño"))
