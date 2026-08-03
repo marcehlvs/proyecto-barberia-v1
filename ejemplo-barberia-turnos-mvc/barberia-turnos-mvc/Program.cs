@@ -1,4 +1,5 @@
 using barberia_turnos_mvc.Data;
+using barberia_turnos_mvc.Filters;
 using barberia_turnos_mvc.Helpers;
 using barberia_turnos_mvc.Services;
 using barberia_turnos_mvc.Middleware;
@@ -10,7 +11,14 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<RequiereBarberiaPropiaFilter>();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Global: corre en TODOS los controllers, actuales y futuros. Ver
+    // comentario en RequiereBarberiaPropiaFilter.cs para el detalle de qué
+    // problema de seguridad resuelve.
+    options.Filters.Add<RequiereBarberiaPropiaFilter>();
+});
 builder.Services.AddDbContext<BarberiaDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("BarberiaConnection")));
 builder.Services.AddScoped<TurnoValidacionService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();

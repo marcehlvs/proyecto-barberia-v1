@@ -38,8 +38,32 @@ namespace barberia_turnos_mvc.Services
         // nunca conectó su cuenta de Mercado Pago.
         Task<string?> ObtenerAccessTokenValidoAsync(Barberia barberia);
 
+        // Consulta a la propia API de MP (GET /users/me) de quién es
+        // realmente la cuenta conectada. Sirve para que el dueño confirme
+        // a simple vista si conectó la cuenta correcta (y no, por ejemplo,
+        // la misma que usa para comprar al probar).
+        Task<MercadoPagoCuentaInfo?> ObtenerInfoCuentaConectadaAsync(Barberia barberia);
+
         // Borra la conexión (el dueño puede desvincular la cuenta).
         void Desconectar(Barberia barberia);
+    }
+
+    public class MercadoPagoCuentaInfo
+    {
+        [JsonPropertyName("id")]
+        public long Id { get; set; }
+
+        [JsonPropertyName("nickname")]
+        public string? Nickname { get; set; }
+
+        [JsonPropertyName("email")]
+        public string? Email { get; set; }
+
+        [JsonPropertyName("first_name")]
+        public string? Nombre { get; set; }
+
+        [JsonPropertyName("last_name")]
+        public string? Apellido { get; set; }
     }
 
     public class MercadoPagoTokenService : IMercadoPagoTokenService
@@ -60,6 +84,15 @@ namespace barberia_turnos_mvc.Services
             _context = context;
         }
 
+        // Cuando está en true (MercadoPago:UsarTokensDePrueba=true en config),
+        // MP devuelve un access_token de tipo TEST en vez de APP_USR — el
+        // único que puede procesar tarjetas ficticias y saldo de cuentas de
+        // prueba. Un token APP_USR (producción real) rechaza cualquier medio
+        // de pago de prueba, sin importar si la cuenta conectada es de test.
+        // Poné esto en false (o sacalo directamente) cuando conectes
+        // barberías reales en producción.
+        private bool UsarTokensDePrueba => _config.GetValue<bool>("MercadoPago:UsarTokensDePrueba");
+
         public async Task IntercambiarCodigoPorTokenAsync(Barberia barberia, string code, string redirectUri)
         {
             var clientId = _config["MercadoPago:ClientId"];
@@ -72,7 +105,8 @@ namespace barberia_turnos_mvc.Services
                 client_secret = clientSecret,
                 grant_type = "authorization_code",
                 code,
-                redirect_uri = redirectUri
+                redirect_uri = redirectUri,
+                test_token = UsarTokensDePrueba
             });
 
             respuesta.EnsureSuccessStatusCode();
@@ -102,7 +136,8 @@ namespace barberia_turnos_mvc.Services
                 client_id = clientId,
                 client_secret = clientSecret,
                 grant_type = "refresh_token",
-                refresh_token = barberia.MercadoPagoRefreshToken
+                refresh_token = barberia.MercadoPagoRefreshToken,
+                test_token = UsarTokensDePrueba
             });
 
             if (!respuesta.IsSuccessStatusCode)
@@ -120,6 +155,21 @@ namespace barberia_turnos_mvc.Services
             await _context.SaveChangesAsync();
 
             return barberia.MercadoPagoAccessToken;
+        }
+
+        public async Task<MercadoPagoCuentaInfo?> ObtenerInfoCuentaConectadaAsync(Barberia barberia)
+        {
+            var accessToken = await ObtenerAccessTokenValidoAsync(barberia);
+            if (accessToken == null) return null;
+
+            var http = _httpClientFactory.CreateClient();
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://api.mercadopago.com/users/me");
+            request.Headers.Add("Authorization", $"Bearer {accessToken}");
+
+            var respuesta = await http.SendAsync(request);
+            if (!respuesta.IsSuccessStatusCode) return null;
+
+            return await respuesta.Content.ReadFromJsonAsync<MercadoPagoCuentaInfo>();
         }
 
         public void Desconectar(Barberia barberia)

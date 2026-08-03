@@ -70,6 +70,22 @@
         Las señas de tus turnos se cobran directamente en tu cuenta.
     </p>
 
+    var cuentaMp = ViewData["MpCuentaConectada"] as barberia_turnos_mvc.Services.MercadoPagoCuentaInfo;
+    @if (cuentaMp != null)
+    {
+        <p style="opacity:0.8; font-size: 14px;">
+            Conectada como: <strong>@cuentaMp.Nombre @cuentaMp.Apellido</strong>
+            (@cuentaMp.Email, usuario @cuentaMp.Nickname)
+            — <span style="opacity:0.7;">verificá que sea la cuenta correcta</span>.
+        </p>
+    }
+    else
+    {
+        <p style="opacity:0.8; font-size: 14px; color:#c96b6b;">
+            No pudimos confirmar de quién es la cuenta conectada ahora mismo (puede ser un problema temporal con la API de Mercado Pago).
+        </p>
+    }
+
     <form asp-controller="MercadoPagoConnect" asp-action="Desconectar" method="post"
           onsubmit="return confirm('¿Seguro que querés desconectar tu cuenta de Mercado Pago? Mientras no vuelvas a conectarla, no vas a poder cobrar señas.');">
         <button type="submit" class="btn-eliminar">Desconectar cuenta de Mercado Pago</button>

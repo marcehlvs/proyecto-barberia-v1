@@ -12,11 +12,13 @@ namespace barberia_turnos_mvc.Controllers
     {
         private readonly BarberiaDbContext _context;
         private readonly ICurrentBarberiaService _currentBarberia;
+        private readonly IMercadoPagoTokenService _mpTokenService;
 
-        public BarberiaController(BarberiaDbContext context, ICurrentBarberiaService currentBarberia)
+        public BarberiaController(BarberiaDbContext context, ICurrentBarberiaService currentBarberia, IMercadoPagoTokenService mpTokenService)
         {
             _context = context;
             _currentBarberia = currentBarberia;
+            _mpTokenService = mpTokenService;
         }
 
         public async Task<IActionResult> Configuracion()
@@ -24,6 +26,12 @@ namespace barberia_turnos_mvc.Controllers
             var barberiaId = _currentBarberia.GetRequerida().Id;
             var barberia = await _context.Barberias.FirstOrDefaultAsync(b => b.Id == barberiaId);
             if (barberia == null) return NotFound();
+
+            if (barberia.TieneMercadoPagoConectado)
+            {
+                ViewData["MpCuentaConectada"] = await _mpTokenService.ObtenerInfoCuentaConectadaAsync(barberia);
+            }
+
             return View(barberia);
         }
 
