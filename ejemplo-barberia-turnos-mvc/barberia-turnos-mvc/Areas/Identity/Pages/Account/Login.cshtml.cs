@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+/// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
@@ -39,58 +39,26 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
         // en el link "Registrate" y en el propio POST.
         public string BarberiaSlug { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public string ReturnUrl { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [TempData]
         public string ErrorMessage { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Required]
             [EmailAddress]
             public string Email { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Required]
             [DataType(DataType.Password)]
             public string Password { get; set; }
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }
         }
@@ -115,7 +83,14 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
+            // Si no vino un returnUrl específico (ej: no venías de un link
+            // protegido), NO usamos la raíz genérica ("/") como destino: la
+            // raíz redirige siempre a la PRIMERA barbería de la base (ver
+            // Program.cs), lo que sacaría a un Cliente de "barberia-test" y
+            // lo mandaría a ver el home de "elcorte" después de loguearse.
+            var huboReturnUrlEspecifico = !string.IsNullOrEmpty(returnUrl);
+            var slugActual = _currentBarberia.Barberia?.Slug;
+            returnUrl ??= !string.IsNullOrEmpty(slugActual) ? Url.Content($"~/{slugActual}") : Url.Content("~/");
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
@@ -128,9 +103,9 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User logged in.");
 
-                    // Si no vino de un link protegido específico (returnUrl genérico = la raíz),
-                    // y es un Dueño, lo mandamos directo a SU panel en vez de la raíz genérica.
-                    if (returnUrl == Url.Content("~/"))
+                    // Sin returnUrl específico, y si es un Dueño, lo mandamos
+                    // directo a SU panel en vez de a la home de la barbería.
+                    if (!huboReturnUrlEspecifico)
                     {
                         var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
                         if (user != null && user.BarberiaId.HasValue && await _signInManager.UserManager.IsInRoleAsync(user, "Dueño"))
