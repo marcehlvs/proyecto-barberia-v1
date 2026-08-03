@@ -1,4 +1,4 @@
-﻿@model barberia_turnos_mvc.Models.Barberia
+@model barberia_turnos_mvc.Models.Barberia
 
 @{
     ViewData["Title"] = "Configuración";
@@ -49,6 +49,43 @@
 
     <button type="submit" class="btn-guardar">Guardar</button>
 </form>
+
+<hr />
+
+<h2>Mercado Pago</h2>
+
+@if (TempData["MpConnectOk"] != null)
+{
+    <div class="alert alert-success">@TempData["MpConnectOk"]</div>
+}
+@if (TempData["MpConnectError"] != null)
+{
+    <div class="alert alert-danger">@TempData["MpConnectError"]</div>
+}
+
+@if (Model.TieneMercadoPagoConectado)
+{
+    <p>
+        ✅ Tu cuenta de Mercado Pago está conectada.
+        Las señas de tus turnos se cobran directamente en tu cuenta.
+    </p>
+
+    <form asp-controller="MercadoPagoConnect" asp-action="Desconectar" method="post"
+          onsubmit="return confirm('¿Seguro que querés desconectar tu cuenta de Mercado Pago? Mientras no vuelvas a conectarla, no vas a poder cobrar señas.');">
+        <button type="submit" class="btn-eliminar">Desconectar cuenta de Mercado Pago</button>
+    </form>
+}
+else
+{
+    <p>
+        ⚠️ Todavía no conectaste tu cuenta de Mercado Pago.
+        Sin esto, tus clientes no van a poder pagar la seña al reservar un turno.
+    </p>
+
+    <a asp-controller="MercadoPagoConnect" asp-action="Conectar" class="btn-guardar">
+        Conectar con Mercado Pago
+    </a>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
