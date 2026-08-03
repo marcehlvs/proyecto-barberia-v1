@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace barberia_turnos_mvc.Models
 {
@@ -30,6 +30,19 @@ namespace barberia_turnos_mvc.Models
 
    public TimeSpan HoraApertura { get; set; } = new TimeSpan(10, 0, 0);
    public TimeSpan HoraCierre { get; set; } = new TimeSpan(20, 0, 0);
+
+   // --- Conexión Mercado Pago (OAuth marketplace) ---
+   // Cada barbería conecta SU PROPIA cuenta de Mercado Pago. Las señas de sus
+   // turnos se cobran con estas credenciales, no con la cuenta global de la app.
+   // Null mientras la barbería no haya conectado su cuenta todavía.
+   public string? MercadoPagoUserId { get; set; }
+   public string? MercadoPagoAccessToken { get; set; }
+   public string? MercadoPagoRefreshToken { get; set; }
+   public string? MercadoPagoPublicKey { get; set; }
+   public DateTime? MercadoPagoTokenExpira { get; set; }
+
+   // Conveniencia: true si la barbería ya conectó su cuenta de MP.
+   public bool TieneMercadoPagoConectado => !string.IsNullOrEmpty(MercadoPagoAccessToken);
 
     }
 }

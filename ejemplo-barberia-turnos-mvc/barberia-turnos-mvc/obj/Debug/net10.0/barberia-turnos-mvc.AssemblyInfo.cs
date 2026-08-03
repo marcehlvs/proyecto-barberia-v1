@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("barberia-turnos-mvc")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b31276e306e0329364a357f87280e1a0d80ce208")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+013cec6e4755231f2ed80537d7bd6aa603a2b800")]
 [assembly: System.Reflection.AssemblyProductAttribute("barberia-turnos-mvc")]
 [assembly: System.Reflection.AssemblyTitleAttribute("barberia-turnos-mvc")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

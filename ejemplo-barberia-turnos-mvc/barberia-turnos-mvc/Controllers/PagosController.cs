@@ -1,6 +1,9 @@
-﻿using barberia_turnos_mvc.Data;
+using barberia_turnos_mvc.Data;
+using barberia_turnos_mvc.Services;
+using MercadoPago.Client;
 using MercadoPago.Client.Payment;
 using MercadoPago.Client.Preference;
+using MercadoPago.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,12 +18,14 @@ namespace barberia_turnos_mvc.Controllers
         private readonly BarberiaDbContext _context;
         private readonly IConfiguration _config;
         private readonly IWebHostEnvironment _env;
+        private readonly IMercadoPagoTokenService _tokenService;
 
-        public PagosController(BarberiaDbContext context, IConfiguration config, IWebHostEnvironment env)
+        public PagosController(BarberiaDbContext context, IConfiguration config, IWebHostEnvironment env, IMercadoPagoTokenService tokenService)
         {
             _context = context;
             _config = config;
             _env = env;
+            _tokenService = tokenService;
         }
 
         public async Task<IActionResult> IniciarPago(int turnoId)
@@ -34,15 +39,26 @@ namespace barberia_turnos_mvc.Controllers
             if (turno.MontoSeña == null || turno.MontoSeña.Value <= 0)
                 return BadRequest("El turno no tiene un monto de seña válido.");
 
+            // La barbería tiene que haber conectado su propia cuenta de MP
+            // antes de poder cobrar. Si todavía no lo hizo, no hay a nombre
+            // de quién cobrar la seña.
+            var accessToken = await _tokenService.ObtenerAccessTokenValidoAsync(turno.Barberia);
+            if (accessToken == null)
+            {
+                TempData["ErrorPago"] = "Esta barbería todavía no configuró Mercado Pago. Contactala para que pueda cobrar señas.";
+                return RedirectToAction("MisTurnos", "MiCuenta");
+            }
+
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var notificationBase = _config["MercadoPago:NotificationUrlBase"] ?? baseUrl;
-            var notificationUrlFinal = $"{notificationBase}/Pagos/Notificacion";
+            var slug = turno.Barberia.Slug;
 
             // Las BackUrls tienen que incluir el slug de la barbería: la ruta
-            // convencional de la app exige {barberiaSlug}/{controller}/{action},
-            // así que sin el slug Mercado Pago redirige a una URL que no matchea
-            // ningún controller real (ver bug de /Pagos/Exito -> 404).
-            var slug = turno.Barberia.Slug;
+            // convencional de la app exige {barberiaSlug}/{controller}/{action}.
+            var notificationBase = _config["MercadoPago:NotificationUrlBase"] ?? baseUrl;
+            // Le agregamos el barberiaId a la propia NotificationUrl: cuando
+            // llegue el webhook, así sabemos de entrada con qué token de
+            // acceso hay que consultar el pago (ver comentario en Notificacion).
+            var notificationUrlFinal = $"{notificationBase}/Pagos/Notificacion?barberiaId={turno.BarberiaId}";
 
             var request = new PreferenceRequest
             {
@@ -64,11 +80,14 @@ namespace barberia_turnos_mvc.Controllers
                 },
                 AutoReturn = "approved",
                 NotificationUrl = notificationUrlFinal,
-                ExternalReference = turno.Id.ToString()
+                ExternalReference = turno.Id.ToString(),
+                MarketplaceFee = CalcularComision(turno.MontoSeña.Value)
             };
 
+            var requestOptions = new RequestOptions { AccessToken = accessToken };
+
             var client = new PreferenceClient();
-            var preference = await client.CreateAsync(request);
+            var preference = await client.CreateAsync(request, requestOptions);
 
             turno.MercadoPagoPreferenceId = preference.Id;
             await _context.SaveChangesAsync();
@@ -87,7 +106,8 @@ namespace barberia_turnos_mvc.Controllers
     [FromQuery(Name = "type")] string? type,
     [FromQuery(Name = "topic")] string? topic,
     [FromQuery(Name = "data.id")] string? dataId,
-    [FromQuery(Name = "id")] string? id)
+    [FromQuery(Name = "id")] string? id,
+    [FromQuery(Name = "barberiaId")] int? barberiaId)
         {
             var tipoNotificacion = type ?? topic;
             var paymentId = dataId ?? id; // esto sigue sirviendo para BUSCAR el pago en la API
@@ -100,13 +120,25 @@ namespace barberia_turnos_mvc.Controllers
                 return Unauthorized();
             }
 
+            if (barberiaId == null) return Ok();
+
+            var barberia = await _context.Barberias.FirstOrDefaultAsync(b => b.Id == barberiaId.Value);
+            if (barberia == null) return Ok();
+
+            // El pago pertenece a la cuenta de MP de ESTA barbería, así que
+            // hay que consultarlo con SU token (no con uno global). Ver
+            // comentario en IniciarPago sobre por qué viaja el barberiaId
+            // en la propia NotificationUrl.
+            var accessToken = await _tokenService.ObtenerAccessTokenValidoAsync(barberia);
+            if (accessToken == null) return Ok();
+
             var paymentClient = new PaymentClient();
-            var payment = await paymentClient.GetAsync(long.Parse(paymentId));
+            var payment = await paymentClient.GetAsync(long.Parse(paymentId), new RequestOptions { AccessToken = accessToken });
 
             if (payment?.ExternalReference == null) return Ok();
 
             var turno = await _context.Turnos
-                .FirstOrDefaultAsync(t => t.Id == int.Parse(payment.ExternalReference));
+                .FirstOrDefaultAsync(t => t.Id == int.Parse(payment.ExternalReference) && t.BarberiaId == barberiaId.Value);
 
             if (turno == null) return Ok();
 
@@ -121,6 +153,17 @@ namespace barberia_turnos_mvc.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
+
+        // Comisión del marketplace (lo que te queda a vos por cada seña
+        // cobrada). 0 hasta que configures un porcentaje — así el
+        // comportamiento no cambia para nadie hasta que lo actives a propósito.
+        private decimal CalcularComision(decimal montoSeña)
+        {
+            var porcentaje = _config.GetValue<decimal?>("MercadoPago:ComisionPorcentaje") ?? 0;
+            if (porcentaje <= 0) return 0;
+            return Math.Round(montoSeña * porcentaje / 100m, 2);
+        }
+
         private bool ValidarFirma()
         {
             var xSignature = Request.Headers["x-signature"].ToString();

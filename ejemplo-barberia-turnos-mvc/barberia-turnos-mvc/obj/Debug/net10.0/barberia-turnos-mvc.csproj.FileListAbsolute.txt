@@ -290,6 +290,17 @@ C:\Users\bejar\Desktop\C# nivel 4\ejemplo-barberia-turnos-mvc\barberia-turnos-mv
 C:\Users\bejar\Desktop\C# nivel 4\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\bin\Debug\net10.0\MercadoPago.dll
 C:\Users\bejar\Desktop\C# nivel 4\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
 C:\Users\bejar\Desktop\C# nivel 4\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\compressed\n6xe9yg4p0-{0}-hmde9zhadj-hmde9zhadj.gz
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.csproj.AssemblyReference.cache
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.AssemblyInfoInputs.cache
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.AssemblyInfo.cs
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.csproj.CoreCompileInputs.cache
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.RazorAssemblyInfo.cache
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.RazorAssemblyInfo.cs
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.sourcelink.json
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\bin\Debug\net10.0\appsettings.Development.json
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\bin\Debug\net10.0\appsettings.json
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\bin\Debug\net10.0\barberia-turnos-mvc.staticwebassets.runtime.json
@@ -430,17 +441,6 @@ C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\bin\Debug\net10.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\bin\Debug\net10.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\bin\Debug\net10.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.csproj.AssemblyReference.cache
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\rpswa.dswa.cache.json
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.AssemblyInfoInputs.cache
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.AssemblyInfo.cs
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.csproj.CoreCompileInputs.cache
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.MvcApplicationPartsAssemblyInfo.cs
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.MvcApplicationPartsAssemblyInfo.cache
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.RazorAssemblyInfo.cache
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.RazorAssemblyInfo.cs
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.sourcelink.json
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\rjimswa.dswa.cache.json
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
@@ -585,4 +585,3 @@ C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.pdb
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.genruntimeconfig.cache
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\ref\barberia-turnos-mvc.dll
-C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

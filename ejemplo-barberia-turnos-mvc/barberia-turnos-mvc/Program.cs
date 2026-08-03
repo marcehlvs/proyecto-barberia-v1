@@ -5,7 +5,6 @@ using barberia_turnos_mvc.Middleware;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using MercadoPago.Config;
 using Microsoft.AspNetCore.Identity.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +16,8 @@ builder.Services.AddScoped<TurnoValidacionService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddScoped<CurrentBarberiaService>();
 builder.Services.AddScoped<ICurrentBarberiaService>(sp => sp.GetRequiredService<CurrentBarberiaService>());
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IMercadoPagoTokenService, MercadoPagoTokenService>();
 
 
 builder.Services
@@ -34,7 +35,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Home/AccesoDenegado";
 });
 
-MercadoPagoConfig.AccessToken = builder.Configuration["MercadoPago:AccessToken"];
+// Ya NO seteamos un AccessToken global acá: desde que cada barbería conecta
+// su propia cuenta de Mercado Pago (ver MercadoPagoConnectController), cada
+// llamada a la API de MP pasa su propio token explícitamente vía
+// RequestOptions (en PagosController). Un AccessToken global sería el token
+// de TU cuenta, y usarlo por accidente en vez del de la barbería
+// correspondiente cobraría la seña a nombre tuyo, no del dueño real.
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
