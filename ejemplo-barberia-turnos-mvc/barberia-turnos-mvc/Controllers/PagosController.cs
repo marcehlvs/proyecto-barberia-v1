@@ -118,6 +118,7 @@ namespace barberia_turnos_mvc.Controllers
             await _context.SaveChangesAsync();
 
             return Redirect(preference.InitPoint);
+
         }
 
         public IActionResult Exito() => View();
