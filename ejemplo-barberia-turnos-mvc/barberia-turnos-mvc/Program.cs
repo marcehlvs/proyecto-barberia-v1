@@ -56,9 +56,27 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<BarberiaDbContext>();
 
-    DbSeeder.Seed(context);
+    // Aplica las migraciones pendientes SIEMPRE (dev y producción).
+    // EnsureCreated() y las migraciones son mutuamente excluyentes:
+    // en Azure SQL necesitamos que el historial de migraciones quede
+    // registrado en la base para poder seguir evolucionando el esquema.
+    context.Database.Migrate();
 
-    await DbSeeder.SeedRolesYUsuarios(services);
+    // Los roles son necesarios en cualquier ambiente para que Identity
+    // funcione (los chequeos de [Authorize(Roles = "Dueño")] dependen
+    // de que existan), así que esto corre siempre.
+    await DbSeeder.SeedRoles(services);
+
+    // Los datos de EJEMPLO (barbería "El Corte", clientes/turnos de
+    // prueba, y el usuario Dueño con contraseña conocida) solo tienen
+    // sentido en desarrollo. Sembrar esto en producción dejaría una
+    // cuenta con contraseña pública (visible en el historial de git)
+    // funcionando contra datos reales.
+    if (app.Environment.IsDevelopment())
+    {
+        DbSeeder.SeedDatosDeEjemplo(context);
+        await DbSeeder.SeedDuenoDeEjemplo(services);
+    }
 }
 
 
