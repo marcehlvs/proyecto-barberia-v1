@@ -585,3 +585,4 @@ C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.pdb
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\barberia-turnos-mvc.genruntimeconfig.cache
 C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\ref\barberia-turnos-mvc.dll
+C:\Users\bejar\Desktop\proyecto-barberia-v1\ejemplo-barberia-turnos-mvc\barberia-turnos-mvc\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

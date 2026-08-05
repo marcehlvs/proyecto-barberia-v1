@@ -194,9 +194,15 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 
     </div>
 </div>";
+                    try
+                    {
+                        await _emailSender.SendEmailAsync(Input.Email, $"Confirmá tu cuenta - {barberia.Nombre}", htmlMessage);
+                    }
+                    catch
+                    {
 
-                    await _emailSender.SendEmailAsync(Input.Email, $"Confirmá tu cuenta - {barberia.Nombre}", htmlMessage);
-
+                    }
+                    
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
                         return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
