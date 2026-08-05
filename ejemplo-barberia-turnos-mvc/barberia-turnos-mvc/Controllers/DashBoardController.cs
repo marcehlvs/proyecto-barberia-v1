@@ -1,4 +1,5 @@
-﻿using barberia_turnos_mvc.Data;
+﻿using barberia_turnos_mvc.Helpers;
+using barberia_turnos_mvc.Data;
 using barberia_turnos_mvc.Models;
 using barberia_turnos_mvc.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +27,7 @@ namespace barberia_turnos_mvc.Controllers
             var barberiaId = _currentBarberia.GetRequerida().Id;
 
             await _validacionService.ExpirarTurnosVencidosAsync();
-            var hoy = DateTime.Today;
+            var hoy = HoraArgentina.Hoy;
             var mananaInicio = hoy.AddDays(1);
 
             var turnosDeHoy = await _context.Turnos

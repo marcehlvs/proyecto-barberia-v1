@@ -1,3 +1,4 @@
+using barberia_turnos_mvc.Helpers;
 using barberia_turnos_mvc.Data;
 using barberia_turnos_mvc.Models;
 using Microsoft.EntityFrameworkCore;
@@ -65,7 +66,7 @@ namespace barberia_turnos_mvc.Services
         public async Task ExpirarTurnosVencidosAsync()
         {
             var barberiaId = _currentBarberia.GetRequerida().Id;
-            var limite = DateTime.Now.AddMinutes(-2);
+            var limite = HoraArgentina.Ahora.AddMinutes(-2);
 
             var turnosVencidos = await _context.Turnos
                 .Where(t => t.BarberiaId == barberiaId)
@@ -121,7 +122,7 @@ namespace barberia_turnos_mvc.Services
                 var finSlot = inicioSlot.AddMinutes(duracion);
 
                 if (finSlot.TimeOfDay > barberia.HoraCierre) continue;
-                if (inicioSlot < DateTime.Now) continue;
+                if (inicioSlot < HoraArgentina.Ahora) continue;
 
                 var disponible = true;
 

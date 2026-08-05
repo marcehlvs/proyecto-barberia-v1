@@ -1,3 +1,4 @@
+using barberia_turnos_mvc.Helpers;
 using barberia_turnos_mvc.Data;
 using barberia_turnos_mvc.Models;
 using barberia_turnos_mvc.Services;
@@ -144,7 +145,7 @@ namespace barberia_turnos_mvc.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            if (fechaHora < DateTime.Now)
+            if (fechaHora < HoraArgentina.Ahora)
             {
                 ModelState.AddModelError("", "No se puede reservar un turno en una fecha u hora pasada.");
             }
@@ -181,7 +182,7 @@ namespace barberia_turnos_mvc.Controllers
                     BarberiaId = barberia.Id,
                     MontoSeña = montoSeña,
                     SeñaPagada = false,
-                    FechaCreacion = DateTime.Now
+                    FechaCreacion = HoraArgentina.Ahora
                 };
 
                 _context.Turnos.Add(turno);

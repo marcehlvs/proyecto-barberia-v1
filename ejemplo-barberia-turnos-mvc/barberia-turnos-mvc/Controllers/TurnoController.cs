@@ -75,7 +75,7 @@ namespace barberia_turnos_mvc.Controllers
         {
             var barberiaId = _currentBarberia.GetRequerida().Id;
 
-            if (turno.FechaHora < DateTime.Now)
+            if (turno.FechaHora < HoraArgentina.Ahora)
             {
                 ModelState.AddModelError("FechaHora", "No se puede reservar un turno en una fecha u hora pasada.");
             }
@@ -114,7 +114,7 @@ namespace barberia_turnos_mvc.Controllers
 
                 turno.BarberiaId = barberiaId;
                 turno.MontoSeña = Math.Round(servicio.Precio * barberia!.PorcentajeSeña / 100m, 2);
-                turno.FechaCreacion = DateTime.Now;
+                turno.FechaCreacion = HoraArgentina.Ahora;
 
                 _context.Add(turno);
                 await _context.SaveChangesAsync();
@@ -152,7 +152,7 @@ namespace barberia_turnos_mvc.Controllers
                 .AnyAsync(t => t.Id == id && t.BarberiaId == barberiaId);
             if (!perteneceABarberia) return NotFound();
 
-            if (turno.FechaHora < DateTime.Now)
+            if (turno.FechaHora < HoraArgentina.Ahora)
             {
                 ModelState.AddModelError("FechaHora", "No se puede mover un turno a una fecha u hora pasada.");
             }
