@@ -19,7 +19,18 @@ builder.Services.AddControllersWithViews(options =>
     // problema de seguridad resuelve.
     options.Filters.Add<RequiereBarberiaPropiaFilter>();
 });
-builder.Services.AddDbContext<BarberiaDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("BarberiaConnection")));
+
+builder.Services.AddDbContext<BarberiaDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("BarberiaConnection"),
+        sqlServerOptionsAction: sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
+        }));
+
 builder.Services.AddScoped<TurnoValidacionService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddScoped<CurrentBarberiaService>();
