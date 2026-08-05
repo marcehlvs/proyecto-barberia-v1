@@ -55,6 +55,14 @@
             <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
         </div>
 
+        <hr style="opacity:0.2; margin: 24px 0;" />
+
+        <div class="form-floating mb-3">
+            <input asp-for="Input.CodigoInvitacion" class="form-control" autocomplete="off" placeholder="Código de invitación" />
+            <label asp-for="Input.CodigoInvitacion">Código de invitación</label>
+            <span asp-validation-for="Input.CodigoInvitacion" class="text-danger"></span>
+        </div>
+
         <button type="submit" class="btn-guardar w-100">Crear mi barbería</button>
 
         <div class="mt-3 text-center">

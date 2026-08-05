@@ -28,6 +28,7 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmailSender _emailSender;
         private readonly BarberiaDbContext _context;
+        private readonly IConfiguration _config;
 
         public RegisterDuenoModel(
             UserManager<ApplicationUser> userManager,
@@ -35,7 +36,8 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
             SignInManager<ApplicationUser> signInManager,
             RoleManager<IdentityRole> roleManager,
             IEmailSender emailSender,
-            BarberiaDbContext context)
+            BarberiaDbContext context,
+            IConfiguration config)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -43,6 +45,7 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
             _roleManager = roleManager;
             _emailSender = emailSender;
             _context = context;
+            _config = config;
         }
 
         [BindProperty]
@@ -83,6 +86,13 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
             [Display(Name = "Confirmar contraseña")]
             [Compare("Password", ErrorMessage = "Las contraseñas no coinciden.")]
             public string ConfirmPassword { get; set; }
+
+            // Código que vos le pasás a mano a cada dueño real antes de
+            // que se registre. Sin el código correcto, no se puede crear
+            // una barbería nueva.
+            [Required(ErrorMessage = "Ingresá el código de invitación.")]
+            [Display(Name = "Código de invitación")]
+            public string CodigoInvitacion { get; set; }
         }
 
         public void OnGet()
@@ -91,6 +101,16 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
+            var codigoEsperado = _config["RegistroDueno:CodigoInvitacion"];
+
+            // Si no hay ningún código configurado, por seguridad el registro
+            // queda BLOQUEADO por defecto (fail-closed), no abierto.
+            if (string.IsNullOrEmpty(codigoEsperado) || Input.CodigoInvitacion != codigoEsperado)
+            {
+                ModelState.AddModelError("Input.CodigoInvitacion", "El código de invitación no es válido.");
+                return Page();
+            }
+
             var slugNormalizado = Input.Slug?.Trim().ToLower();
             Input.Slug = slugNormalizado;
 
@@ -112,9 +132,6 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                 Slug = slugNormalizado,
                 Direccion = Input.Direccion?.Trim() ?? "",
                 Telefono = Input.Telefono?.Trim() ?? ""
-                // PorcentajeSeña, MinutosEntreTurnos, HoraApertura, HoraCierre
-                // quedan con los valores por defecto del modelo; el dueño los
-                // ajusta después desde "Configuración".
             };
             _context.Barberias.Add(barberia);
             await _context.SaveChangesAsync();
@@ -131,7 +148,6 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 
             if (!result.Succeeded)
             {
-                // Si falla la creación del usuario, no dejamos una barbería huérfana.
                 _context.Barberias.Remove(barberia);
                 await _context.SaveChangesAsync();
 
@@ -142,14 +158,12 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            // 3) Asegurar que exista el rol "Dueño" y asignárselo
             if (!await _roleManager.RoleExistsAsync("Dueño"))
             {
                 await _roleManager.CreateAsync(new IdentityRole("Dueño"));
             }
             await _userManager.AddToRoleAsync(user, "Dueño");
 
-            // 4) Email de bienvenida (mismo estilo que el de clientes)
             var htmlMessage = $@"
 <div style='font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 30px 0;'>
     <div style='background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.08);'>
@@ -181,7 +195,6 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                 // No bloqueamos el alta si el email falla; el dueño ya puede entrar igual.
             }
 
-            // 5) Firmar sesión directo (RequireConfirmedAccount está en false) y mandarlo a su panel
             await _signInManager.SignInAsync(user, isPersistent: false);
             return LocalRedirect($"/{barberia.Slug}/Dashboard");
         }
