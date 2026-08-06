@@ -98,6 +98,8 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
             var barberia = _currentBarberia.Barberia;
+            BarberiaSlug = barberia?.Slug;   // 👈 evita que el form/links pierdan el slug si hay que volver a mostrar la página
+
             if (barberia is null)
             {
                 ModelState.AddModelError(string.Empty,

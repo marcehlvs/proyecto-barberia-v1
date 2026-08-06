@@ -93,6 +93,7 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             var slugActual = _currentBarberia.Barberia?.Slug;
+            BarberiaSlug = slugActual;   // 👈 evita que el form/links pierdan el slug si hay que volver a mostrar la página
             var returnUrlGenerico = !string.IsNullOrEmpty(slugActual) ? Url.Content($"~/{slugActual}") : Url.Content("~/");
             returnUrl ??= returnUrlGenerico;
 
