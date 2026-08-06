@@ -1,9 +1,9 @@
 using barberia_turnos_mvc.Data;
+using barberia_turnos_mvc.Models;
 using barberia_turnos_mvc.Services;
 using MercadoPago.Client;
 using MercadoPago.Client.Payment;
 using MercadoPago.Client.Preference;
-using MercadoPago.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -30,33 +30,19 @@ namespace barberia_turnos_mvc.Controllers
 
         public async Task<IActionResult> IniciarPago(int turnoId)
         {
-            Console.WriteLine($"[MP Pago] IniciarPago llamado. turnoId={turnoId}");
-
             var turno = await _context.Turnos
                 .Include(t => t.Servicio)
                 .Include(t => t.Barberia)
                 .FirstOrDefaultAsync(t => t.Id == turnoId);
 
-            if (turno == null)
-            {
-                Console.WriteLine($"[MP Pago] Turno {turnoId} no encontrado.");
-                return NotFound();
-            }
-
-            Console.WriteLine($"[MP Pago] Turno encontrado. BarberiaId={turno.BarberiaId} ({turno.Barberia?.Nombre}), MontoSeña={turno.MontoSeña}");
-
+            if (turno == null) return NotFound();
             if (turno.MontoSeña == null || turno.MontoSeña.Value <= 0)
-            {
-                Console.WriteLine("[MP Pago] MontoSeña inválido, se corta acá.");
                 return BadRequest("El turno no tiene un monto de seña válido.");
-            }
 
             // La barbería tiene que haber conectado su propia cuenta de MP
             // antes de poder cobrar. Si todavía no lo hizo, no hay a nombre
             // de quién cobrar la seña.
             var accessToken = await _tokenService.ObtenerAccessTokenValidoAsync(turno.Barberia);
-            Console.WriteLine($"[MP Pago] accessToken obtenido: {(accessToken == null ? "NULL (no hay conexión válida)" : accessToken[..Math.Min(12, accessToken.Length)] + "...")}");
-
             if (accessToken == null)
             {
                 TempData["ErrorPago"] = "Esta barbería todavía no configuró Mercado Pago. Contactala para que pueda cobrar señas.";
@@ -101,24 +87,24 @@ namespace barberia_turnos_mvc.Controllers
             var requestOptions = new RequestOptions { AccessToken = accessToken };
 
             var client = new PreferenceClient();
-            MercadoPago.Resource.Preference.Preference preference;
-            try
-            {
-                preference = await client.CreateAsync(request, requestOptions);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[MP Pago] ERROR creando la preferencia: {ex.GetType().Name} - {ex.Message}");
-                throw;
-            }
+            var preference = await client.CreateAsync(request, requestOptions);
 
-            Console.WriteLine($"[MP Pago] Preferencia creada OK. Id={preference.Id}, InitPoint={preference.InitPoint}");
+            Console.WriteLine($"[MP Pago] Preferencia creada OK. Id={preference.Id}, InitPoint={preference.InitPoint}, SandboxInitPoint={preference.SandboxInitPoint}");
 
             turno.MercadoPagoPreferenceId = preference.Id;
             await _context.SaveChangesAsync();
 
-            return Redirect(preference.InitPoint);
+            // Con un access_token normal (APP_USR) de una cuenta conectada,
+            // MP arma DOS checkouts distintos para la misma preferencia:
+            // init_point (producción real) y sandbox_init_point (acepta
+            // cuentas/tarjetas de prueba). Usar init_point para pagar con
+            // credenciales de prueba tira un error genérico en el checkout,
+            // aunque el token y la preferencia estén bien armados.
+            var urlDestino = _config.GetValue<bool>("MercadoPago:ModoPruebas")
+                ? preference.SandboxInitPoint
+                : preference.InitPoint;
 
+            return Redirect(urlDestino);
         }
 
         public IActionResult Exito() => View();
@@ -128,73 +114,101 @@ namespace barberia_turnos_mvc.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Route("Pagos/Notificacion")]
-        public async Task<IActionResult> Notificacion(
-    [FromQuery(Name = "type")] string? type,
-    [FromQuery(Name = "topic")] string? topic,
-    [FromQuery(Name = "data.id")] string? dataId,
-    [FromQuery(Name = "id")] string? id,
-    [FromQuery(Name = "barberiaId")] int? barberiaId)
+        public async Task<IActionResult> Notificacion()
         {
-            var tipoNotificacion = type ?? topic;
-            var paymentId = dataId ?? id; // esto sigue sirviendo para BUSCAR el pago en la API
-
-            Console.WriteLine($"[MP Webhook] Notificacion recibida. type={type}, topic={topic}, dataId={dataId}, id={id}, barberiaId={barberiaId}");
-
-            if (tipoNotificacion != "payment" || string.IsNullOrEmpty(paymentId))
+            // Leemos el body crudo UNA sola vez: lo necesitamos tanto para
+            // el formato nuevo de webhook (JSON con type/data.id/user_id,
+            // que llega cuando MP entrega a la URL fija configurada en el
+            // panel de la Aplicación) como para la validación de firma, que
+            // tiene que calcularse sobre el MISMO "id" que usamos para
+            // consultar el pago — antes solo mirábamos la query string, y
+            // si el id venía únicamente en el body, el hash no coincidía
+            // nunca (por eso el 401 persistente).
+            string bodyRaw;
+            using (var reader = new StreamReader(Request.Body))
             {
-                Console.WriteLine("[MP Webhook] Ignorada: no es notificación de tipo 'payment', o falta el paymentId.");
-                return Ok();
+                bodyRaw = await reader.ReadToEndAsync();
             }
 
-            if (!ValidarFirma())
+            var tipoNotificacion = Request.Query["type"].ToString();
+            if (string.IsNullOrEmpty(tipoNotificacion)) tipoNotificacion = Request.Query["topic"].ToString();
+
+            var dataId = Request.Query["data.id"].ToString();
+            if (string.IsNullOrEmpty(dataId)) dataId = Request.Query["id"].ToString();
+
+            string? userIdBody = null;
+
+            if (string.IsNullOrEmpty(tipoNotificacion) || string.IsNullOrEmpty(dataId) || string.IsNullOrEmpty(userIdBody))
             {
-                Console.WriteLine("[MP Webhook] Firma inválida -> Unauthorized.");
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(bodyRaw);
+                    var root = doc.RootElement;
+
+                    if (string.IsNullOrEmpty(tipoNotificacion) && root.TryGetProperty("type", out var typeEl))
+                        tipoNotificacion = typeEl.GetString();
+
+                    if (string.IsNullOrEmpty(dataId) && root.TryGetProperty("data", out var dataEl) && dataEl.TryGetProperty("id", out var idEl))
+                        dataId = idEl.GetString();
+
+                    if (root.TryGetProperty("user_id", out var userIdEl))
+                        userIdBody = userIdEl.ValueKind == System.Text.Json.JsonValueKind.String
+                            ? userIdEl.GetString()
+                            : userIdEl.GetRawText();
+                }
+                catch
+                {
+                    // Body vacío o no es JSON (ej: entrega en formato viejo,
+                    // todo por query string) — no hay nada más para leer.
+                }
+            }
+
+            Console.WriteLine($"[MP Webhook] tipo={tipoNotificacion}, dataId={dataId}, userIdBody={userIdBody}");
+
+            if (tipoNotificacion != "payment" || string.IsNullOrEmpty(dataId))
+                return Ok();
+
+            if (!ValidarFirma(dataId))
+            {
                 return Unauthorized();
             }
 
-            if (barberiaId == null)
+            // Preferimos el barberiaId de la query string (entrega vía el
+            // notification_url de la preferencia, que sí lo incluye). Si no
+            // está —típicamente porque la entrega vino de la URL FIJA
+            // configurada en el panel de la Aplicación, que no puede llevar
+            // query params dinámicos por barbería— usamos el user_id del
+            // body para encontrar qué barbería es dueña de este pago.
+            Barberia? barberia = null;
+
+            if (int.TryParse(Request.Query["barberiaId"].ToString(), out var barberiaIdQuery))
             {
-                Console.WriteLine("[MP Webhook] Sin barberiaId en la query -> se corta.");
-                return Ok();
+                barberia = await _context.Barberias.FirstOrDefaultAsync(b => b.Id == barberiaIdQuery);
             }
 
-            var barberia = await _context.Barberias.FirstOrDefaultAsync(b => b.Id == barberiaId.Value);
+            if (barberia == null && !string.IsNullOrEmpty(userIdBody))
+            {
+                barberia = await _context.Barberias.FirstOrDefaultAsync(b => b.MercadoPagoUserId == userIdBody);
+            }
+
             if (barberia == null)
             {
-                Console.WriteLine($"[MP Webhook] No existe ninguna Barberia con Id={barberiaId.Value}.");
+                Console.WriteLine("[MP Webhook] No se pudo identificar la barbería (ni por barberiaId ni por user_id) -> se corta.");
                 return Ok();
             }
 
-            // El pago pertenece a la cuenta de MP de ESTA barbería, así que
-            // hay que consultarlo con SU token (no con uno global). Ver
-            // comentario en IniciarPago sobre por qué viaja el barberiaId
-            // en la propia NotificationUrl.
             var accessToken = await _tokenService.ObtenerAccessTokenValidoAsync(barberia);
-            if (accessToken == null)
-            {
-                Console.WriteLine($"[MP Webhook] La barbería {barberia.Nombre} no tiene un accessToken válido -> se corta.");
-                return Ok();
-            }
+            if (accessToken == null) return Ok();
 
             var paymentClient = new PaymentClient();
-            var payment = await paymentClient.GetAsync(long.Parse(paymentId), new RequestOptions { AccessToken = accessToken });
+            var payment = await paymentClient.GetAsync(long.Parse(dataId), new RequestOptions { AccessToken = accessToken });
 
-            Console.WriteLine($"[MP Webhook] Payment consultado. Id={payment?.Id}, Status={payment?.Status}, ExternalReference={payment?.ExternalReference}");
-
-            if (payment?.ExternalReference == null)
-            {
-                Console.WriteLine("[MP Webhook] payment.ExternalReference viene null -> se corta.");
-                return Ok();
-            }
+            if (payment?.ExternalReference == null) return Ok();
 
             var turno = await _context.Turnos
-                .FirstOrDefaultAsync(t => t.Id == int.Parse(payment.ExternalReference) && t.BarberiaId == barberiaId.Value);
+                .FirstOrDefaultAsync(t => t.Id == int.Parse(payment.ExternalReference) && t.BarberiaId == barberia.Id);
 
-            if (turno == null)
-            {
-                Console.WriteLine($"[MP Webhook] No se encontró el Turno {payment.ExternalReference} para BarberiaId={barberiaId.Value}.");
-                return Ok();
-            }
+            if (turno == null) return Ok();
 
             turno.MercadoPagoPaymentId = payment.Id.ToString();
 
@@ -202,11 +216,6 @@ namespace barberia_turnos_mvc.Controllers
             {
                 turno.SeñaPagada = true;
                 turno.Estado = barberia_turnos_mvc.Models.EstadoTurno.Confirmado;
-                Console.WriteLine($"[MP Webhook] Turno {turno.Id} marcado como Confirmado/Pagada.");
-            }
-            else
-            {
-                Console.WriteLine($"[MP Webhook] Status='{payment.Status}' no es 'approved', el turno NO se marca como pagado.");
             }
 
             await _context.SaveChangesAsync();
@@ -223,21 +232,17 @@ namespace barberia_turnos_mvc.Controllers
             return Math.Round(montoSeña * porcentaje / 100m, 2);
         }
 
-        private bool ValidarFirma()
+        // Recibe el "id" ya resuelto (venga de query string o del body),
+        // así el hash se calcula siempre sobre el mismo valor que usamos
+        // para buscar el pago — antes este método volvía a leer la query
+        // string por su cuenta, y podía terminar validando contra un id
+        // distinto (o vacío) del que realmente se usó.
+        private bool ValidarFirma(string dataId)
         {
             var xSignature = Request.Headers["x-signature"].ToString();
             var xRequestId = Request.Headers["x-request-id"].ToString();
 
-            // Antes: solo leía "data.id". Ahora: si no está, cae a "id" (formato viejo)
-            var dataId = Request.Query.ContainsKey("data.id")
-                ? Request.Query["data.id"].ToString()
-                : Request.Query["id"].ToString();
-
-            if (string.IsNullOrEmpty(xSignature))
-            {
-                Console.WriteLine("[MP Webhook] ValidarFirma: falta el header x-signature.");
-                return false;
-            }
+            if (string.IsNullOrEmpty(xSignature)) return false;
 
             string? ts = null;
             string? hash = null;
@@ -252,18 +257,10 @@ namespace barberia_turnos_mvc.Controllers
                 else if (clave == "v1") hash = valor;
             }
 
-            if (ts == null || hash == null)
-            {
-                Console.WriteLine($"[MP Webhook] ValidarFirma: no se pudo parsear ts/hash del header x-signature='{xSignature}'.");
-                return false;
-            }
+            if (ts == null || hash == null) return false;
 
             var secreto = _config["MercadoPago:WebhookSecret"]?.Trim();
-            if (string.IsNullOrEmpty(secreto))
-            {
-                Console.WriteLine("[MP Webhook] ValidarFirma: falta configurar MercadoPago:WebhookSecret.");
-                return false;
-            }
+            if (string.IsNullOrEmpty(secreto)) return false;
 
             var partes = new List<string>();
             if (!string.IsNullOrEmpty(dataId)) partes.Add($"id:{dataId.ToLowerInvariant()}");
