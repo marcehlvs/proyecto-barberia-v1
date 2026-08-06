@@ -140,6 +140,11 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
             var user = CreateUser();
             user.BarberiaId = barberia.Id;
             user.NombreCompleto = Input.NombreBarberia.Trim();
+            // El dueño ya demostró ser dueño de este email con solo poder
+            // recibir el mail de bienvenida más abajo. Si dejáramos esto en
+            // false, ForgotPassword (que exige EmailConfirmed) lo dejaría
+            // sin forma de recuperar la contraseña más adelante.
+            user.EmailConfirmed = true;
 
             await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
             await ((IUserEmailStore<ApplicationUser>)_userStore).SetEmailAsync(user, Input.Email, CancellationToken.None);

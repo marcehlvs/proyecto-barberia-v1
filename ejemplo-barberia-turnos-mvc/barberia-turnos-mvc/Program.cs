@@ -7,6 +7,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using System.Globalization;
+
+// Fuerza la cultura Argentina SIEMPRE, sin importar la configuración
+// regional del servidor (que en Azure suele venir en inglés/EE.UU. por
+// default). Sin esto, el mismo formulario de precio puede funcionar
+// local y fallar (o interpretar mal) en Azure.
+var culturaArgentina = new CultureInfo("es-AR");
+CultureInfo.DefaultThreadCurrentCulture = culturaArgentina;
+CultureInfo.DefaultThreadCurrentUICulture = culturaArgentina;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,7 +51,7 @@ builder.Services.AddScoped<IMercadoPagoTokenService, MercadoPagoTokenService>();
 builder.Services
     .AddDefaultIdentity<ApplicationUser>(options =>
     {
-        options.SignIn.RequireConfirmedAccount = false;
+        options.SignIn.RequireConfirmedAccount = true;
         options.Password.RequireNonAlphanumeric = false;
     })
     .AddRoles<IdentityRole>()
