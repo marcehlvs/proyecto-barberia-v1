@@ -136,12 +136,21 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                     {
                         Nombre = Input.Email!.Split('@')[0],
                         Apellido = "",
-                        Telefono = "",
+                        Telefono = null,
                         ApplicationUserId = user.Id,
                         BarberiaId = barberia.Id
                     };
                     _context.Clientes.Add(cliente);
-                    await _context.SaveChangesAsync();
+                    try
+                    {
+                        await _context.SaveChangesAsync();
+                    }
+                    catch (DbUpdateException ex)
+                    {
+                        _logger.LogError(ex, "Error creando Cliente para el usuario {UserId}", user.Id);
+                        ModelState.AddModelError(string.Empty, "Ocurrió un problema creando tu perfil. Probá de nuevo.");
+                        return Page();
+                    }
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

@@ -13,10 +13,10 @@ namespace barberia_turnos_mvc.Models
         [Required(ErrorMessage = "El apellido es obligatorio.")]
         [StringLength(50, ErrorMessage = "El apellido no puede superar los 50 caracteres.")]
         public string Apellido { get; set; } = string.Empty;
-        [Required(ErrorMessage = "El teléfono es obligatorio.")]
+        
         [Phone(ErrorMessage = "Ingresá un número de teléfono válido.")]
         [StringLength(20, ErrorMessage = "El teléfono no puede superar los 20 caracteres.")]
-        public string  Telefono { get; set; } = string.Empty;
+        public string?  Telefono { get; set; }
 
         public string? ApplicationUserId { get; set; }
         [ValidateNever]

@@ -137,7 +137,7 @@ namespace barberia_turnos_mvc.Controllers
                 {
                     Nombre = user?.NombreCompleto ?? user?.Email?.Split('@')[0] ?? "Cliente",
                     Apellido = "",
-                    Telefono = "",
+                    Telefono = null,
                     ApplicationUserId = userId,
                     BarberiaId = barberia.Id
                 };
