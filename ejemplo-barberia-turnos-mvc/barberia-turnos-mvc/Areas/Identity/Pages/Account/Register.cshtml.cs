@@ -25,6 +25,7 @@ using barberia_turnos_mvc.Services;
 
 namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 {
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("RegisterPolicy")]
     public class RegisterModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
@@ -141,16 +142,7 @@ namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
                         BarberiaId = barberia.Id
                     };
                     _context.Clientes.Add(cliente);
-                    try
-                    {
-                        await _context.SaveChangesAsync();
-                    }
-                    catch (DbUpdateException ex)
-                    {
-                        _logger.LogError(ex, "Error creando Cliente para el usuario {UserId}", user.Id);
-                        ModelState.AddModelError(string.Empty, "Ocurrió un problema creando tu perfil. Probá de nuevo.");
-                        return Page();
-                    }
+                    await _context.SaveChangesAsync();
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

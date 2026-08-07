@@ -20,6 +20,7 @@ using barberia_turnos_mvc.Services;
 
 namespace barberia_turnos_mvc.Areas.Identity.Pages.Account
 {
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("LoginPolicy")]
     public class LoginModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;

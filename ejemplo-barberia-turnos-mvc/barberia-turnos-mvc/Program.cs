@@ -47,6 +47,36 @@ builder.Services.AddScoped<ICurrentBarberiaService>(sp => sp.GetRequiredService<
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IMercadoPagoTokenService, MercadoPagoTokenService>();
 
+// Rate limiting: Login y Register son los blancos típicos de fuerza bruta
+// y de bots creando cuentas en cadena. Particionamos por IP: cada IP tiene
+// su propia ventana, así que un usuario real nunca se ve afectado por lo
+// que hagan otras IPs, pero un script probando contraseñas o emails desde
+// la misma IP sí agota su cupo.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("LoginPolicy", httpContext =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",
+            factory: _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("RegisterPolicy", httpContext =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",
+            factory: _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
 
 builder.Services
     .AddDefaultIdentity<ApplicationUser>(options =>
@@ -119,6 +149,7 @@ app.UseMiddleware<CurrentBarberiaMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapStaticAssets();
 

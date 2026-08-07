@@ -22,14 +22,16 @@ namespace barberia_turnos_mvc.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IMercadoPagoTokenService _tokenService;
         private readonly IEmailSender _emailSender;
+        private readonly ILogger<PagosController> _logger;
 
-        public PagosController(BarberiaDbContext context, IConfiguration config, IWebHostEnvironment env, IMercadoPagoTokenService tokenService, IEmailSender emailSender)
+        public PagosController(BarberiaDbContext context, IConfiguration config, IWebHostEnvironment env, IMercadoPagoTokenService tokenService, IEmailSender emailSender, ILogger<PagosController> logger)
         {
             _context = context;
             _config = config;
             _env = env;
             _tokenService = tokenService;
             _emailSender = emailSender;
+            _logger = logger;
         }
 
         public async Task<IActionResult> IniciarPago(int turnoId)
@@ -93,7 +95,8 @@ namespace barberia_turnos_mvc.Controllers
             var client = new PreferenceClient();
             var preference = await client.CreateAsync(request, requestOptions);
 
-            Console.WriteLine($"[MP Pago] Preferencia creada OK. Id={preference.Id}, InitPoint={preference.InitPoint}, SandboxInitPoint={preference.SandboxInitPoint}");
+            _logger.LogInformation("Preferencia MP creada. PreferenciaId={PreferenciaId} TurnoId={TurnoId} InitPoint={InitPoint} SandboxInitPoint={SandboxInitPoint}",
+                preference.Id, turno.Id, preference.InitPoint, preference.SandboxInitPoint);
 
             turno.MercadoPagoPreferenceId = preference.Id;
             await _context.SaveChangesAsync();
@@ -167,7 +170,8 @@ namespace barberia_turnos_mvc.Controllers
                 }
             }
 
-            Console.WriteLine($"[MP Webhook] tipo={tipoNotificacion}, dataId={dataId}, userIdBody={userIdBody}");
+            _logger.LogInformation("Webhook MP recibido. Tipo={TipoNotificacion} DataId={DataId} UserIdBody={UserIdBody}",
+                tipoNotificacion, dataId, userIdBody);
 
             if (tipoNotificacion != "payment" || string.IsNullOrEmpty(dataId))
                 return Ok();
@@ -197,7 +201,7 @@ namespace barberia_turnos_mvc.Controllers
 
             if (barberia == null)
             {
-                Console.WriteLine("[MP Webhook] No se pudo identificar la barbería (ni por barberiaId ni por user_id) -> se corta.");
+                _logger.LogWarning("Webhook MP: no se pudo identificar la barbería (ni por barberiaId ni por user_id). Se corta el procesamiento.");
                 return Ok();
             }
 
@@ -328,13 +332,16 @@ namespace barberia_turnos_mvc.Controllers
 
             if (!esValido)
             {
-                Console.WriteLine($"[MP Webhook] dataId={dataId} | xRequestId={xRequestId} | ts={ts}");
-                Console.WriteLine($"[MP Webhook] Manifest={manifest}");
-                Console.WriteLine($"[MP Webhook] Hash recibido={hash} | Hash calculado={hashCalculado}");
+                // Warning y no Error: una firma inválida no es necesariamente un
+                // ataque (Mercado Pago reintenta webhooks, y una firma vieja
+                // puede llegar tarde), pero sí vale la pena poder buscarlo en
+                // los logs si un pago no se refleja como esperado.
+                _logger.LogWarning("Webhook MP con firma inválida. DataId={DataId} XRequestId={XRequestId} Timestamp={Timestamp} Manifest={Manifest} HashRecibido={HashRecibido} HashCalculado={HashCalculado}",
+                    dataId, xRequestId, ts, manifest, hash, hashCalculado);
 
                 if (_env.IsDevelopment())
                 {
-                    Console.WriteLine("[MP Webhook] ⚠️ Permitida solo por Development.");
+                    _logger.LogWarning("Webhook MP con firma inválida permitido igual: solo corre en Development.");
                     return true;
                 }
             }

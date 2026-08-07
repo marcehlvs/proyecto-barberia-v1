@@ -186,7 +186,22 @@ namespace barberia_turnos_mvc.Controllers
                 };
 
                 _context.Turnos.Add(turno);
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    // Cae acá solo si dos requests pasaron el chequeo de
+                    // ValidarDisponibilidad casi al mismo tiempo (la carrera
+                    // que el índice único de BarberiaDbContext existe para
+                    // frenar). Es el mismo caso que ya cubre el mensaje de
+                    // "reserva pendiente", pero visto desde el otro lado de
+                    // la carrera: acá perdiste vos.
+                    ModelState.AddModelError("", "Justo se ocupó ese horario. Elegí otro, por favor.");
+                    ViewData["ServicioId"] = new SelectList(_context.Servicios.Where(s => s.BarberiaId == barberia.Id), "Id", "Nombre", servicioId);
+                    return View();
+                }
                 return RedirectToAction("IniciarPago", "Pagos", new { turnoId = turno.Id });
             }
 
