@@ -5,10 +5,12 @@ using MercadoPago.Client;
 using MercadoPago.Client.Payment;
 using MercadoPago.Client.Preference;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Encodings.Web;
 
 namespace barberia_turnos_mvc.Controllers
 {
@@ -19,13 +21,15 @@ namespace barberia_turnos_mvc.Controllers
         private readonly IConfiguration _config;
         private readonly IWebHostEnvironment _env;
         private readonly IMercadoPagoTokenService _tokenService;
+        private readonly IEmailSender _emailSender;
 
-        public PagosController(BarberiaDbContext context, IConfiguration config, IWebHostEnvironment env, IMercadoPagoTokenService tokenService)
+        public PagosController(BarberiaDbContext context, IConfiguration config, IWebHostEnvironment env, IMercadoPagoTokenService tokenService, IEmailSender emailSender)
         {
             _context = context;
             _config = config;
             _env = env;
             _tokenService = tokenService;
+            _emailSender = emailSender;
         }
 
         public async Task<IActionResult> IniciarPago(int turnoId)
@@ -206,6 +210,9 @@ namespace barberia_turnos_mvc.Controllers
             if (payment?.ExternalReference == null) return Ok();
 
             var turno = await _context.Turnos
+                .Include(t => t.Servicio)
+                .Include(t => t.Cliente)
+                    .ThenInclude(c => c.ApplicationUser)
                 .FirstOrDefaultAsync(t => t.Id == int.Parse(payment.ExternalReference) && t.BarberiaId == barberia.Id);
 
             if (turno == null) return Ok();
@@ -216,6 +223,48 @@ namespace barberia_turnos_mvc.Controllers
             {
                 turno.SeñaPagada = true;
                 turno.Estado = barberia_turnos_mvc.Models.EstadoTurno.Confirmado;
+
+                var emailCliente = turno.Cliente?.ApplicationUser?.Email;
+                if (!string.IsNullOrEmpty(emailCliente))
+                {
+                    var htmlMessage = $@"
+<div style='font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 30px 0;'>
+    <div style='background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.08);'>
+        <div style='background-color: #1a1a1a; padding: 32px 24px; text-align: center;'>
+            <h1 style='color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;'>💈 {HtmlEncoder.Default.Encode(barberia.Nombre.ToUpper())}</h1>
+        </div>
+        <div style='padding: 32px 24px;'>
+            <h2 style='color: #1a1a1a; margin-top: 0; font-size: 20px;'>¡Turno confirmado!</h2>
+            <p style='color: #444444; font-size: 15px; line-height: 1.6;'>
+                Recibimos tu seña y tu turno quedó confirmado.
+            </p>
+            <table style='width: 100%; margin: 20px 0; font-size: 15px; color: #444444;'>
+                <tr><td style='padding: 4px 0;'><strong>Servicio:</strong></td><td style='padding: 4px 0;'>{HtmlEncoder.Default.Encode(turno.Servicio.Nombre)}</td></tr>
+                <tr><td style='padding: 4px 0;'><strong>Fecha y hora:</strong></td><td style='padding: 4px 0;'>{turno.FechaHora:dd/MM/yyyy HH:mm}</td></tr>
+                <tr><td style='padding: 4px 0;'><strong>Seña pagada:</strong></td><td style='padding: 4px 0;'>${turno.MontoSeña:0.00}</td></tr>
+            </table>
+            <hr style='border: none; border-top: 1px solid #eeeeee; margin: 28px 0;'>
+            <p style='color: #aaaaaa; font-size: 12px; line-height: 1.5;'>
+                Te esperamos en {HtmlEncoder.Default.Encode(barberia.Nombre)}. Si necesitás cambiar o cancelar el turno, hacelo desde tu cuenta.
+            </p>
+        </div>
+        <div style='background-color: #f0f0f0; padding: 16px 24px; text-align: center;'>
+            <p style='color: #999999; font-size: 11px; margin: 0;'>© {DateTime.Now.Year} {HtmlEncoder.Default.Encode(barberia.Nombre)} · Todos los derechos reservados</p>
+        </div>
+    </div>
+</div>";
+                    try
+                    {
+                        await _emailSender.SendEmailAsync(emailCliente, $"Turno confirmado - {barberia.Nombre}", htmlMessage);
+                    }
+                    catch
+                    {
+                        // Igual que en el registro: si falla el envío de mail no
+                        // queremos que se caiga el webhook (MP reintenta si le
+                        // devolvemos un error, y el turno ya quedó confirmado
+                        // en la base, que es lo importante).
+                    }
+                }
             }
 
             await _context.SaveChangesAsync();

@@ -25,6 +25,8 @@
 
     <input type="hidden" name="fechaHora" id="fechaHoraSeleccionada" />
 
+    <p id="mensajeEnvio" class="text-muted mt-2" style="display:none;">Estamos procesando tu reserva, un momento...</p>
+
     <button type="submit" class="btn-guardar mt-3" id="btnReservar" disabled>Reservar</button>
 </form>
 
@@ -36,6 +38,8 @@
         const grilla = document.getElementById('grillaHorarios');
         const inputOculto = document.getElementById('fechaHoraSeleccionada');
         const btnReservar = document.getElementById('btnReservar');
+        const formReserva = document.getElementById('formReserva');
+        const mensajeEnvio = document.getElementById('mensajeEnvio');
 
         const urlBase = grilla.dataset.url;
 
@@ -87,5 +91,15 @@
 
         servicioSelect.addEventListener('change', cargarHorarios);
         fechaInput.addEventListener('change', cargarHorarios);
+
+        // Evita el doble submit (doble tap en mobile, conexión lenta, etc.):
+        // apenas se manda el form, deshabilitamos el botón y avisamos que ya
+        // se está procesando, para que no vuelvan a tocarlo pensando que no
+        // pasó nada.
+        formReserva.addEventListener('submit', () => {
+            btnReservar.disabled = true;
+            btnReservar.textContent = 'Reservando...';
+            mensajeEnvio.style.display = 'block';
+        });
     </script>
 }

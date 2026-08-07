@@ -163,7 +163,7 @@ namespace barberia_turnos_mvc.Controllers
                 return View();
             }
 
-            var errorDisponibilidad = await _validacionService.ValidarDisponibilidad(fechaHora, servicioId);
+            var errorDisponibilidad = await _validacionService.ValidarDisponibilidad(fechaHora, servicioId, clienteId: cliente.Id);
             if (errorDisponibilidad != null)
             {
                 ModelState.AddModelError("", errorDisponibilidad);

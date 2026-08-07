@@ -9,14 +9,16 @@ namespace barberia_turnos_mvc.Services
     {
         private readonly BarberiaDbContext _context;
         private readonly ICurrentBarberiaService _currentBarberia;
+        private readonly IConfiguration _config;
 
-        public TurnoValidacionService(BarberiaDbContext context, ICurrentBarberiaService currentBarberia)
+        public TurnoValidacionService(BarberiaDbContext context, ICurrentBarberiaService currentBarberia, IConfiguration config)
         {
             _context = context;
             _currentBarberia = currentBarberia;
+            _config = config;
         }
 
-        public async Task<string?> ValidarDisponibilidad(DateTime fechaHora, int servicioId, int? turnoIdAExcluir = null)
+        public async Task<string?> ValidarDisponibilidad(DateTime fechaHora, int servicioId, int? turnoIdAExcluir = null, int? clienteId = null)
         {
             var barberiaId = _currentBarberia.GetRequerida().Id;
 
@@ -43,6 +45,17 @@ namespace barberia_turnos_mvc.Services
 
                 if (inicioNuevo < finExistente && inicioExistente < finNuevo)
                 {
+                    // Si el turno que choca es del mismo cliente y todavía está
+                    // pendiente de pago, el mensaje genérico ("ya hay un turno
+                    // agendado") confunde: parece que el horario lo tomó otra
+                    // persona, cuando en realidad es una reserva propia sin
+                    // completar (típicamente por un doble-submit del form).
+                    if (clienteId != null && turno.ClienteId == clienteId.Value && turno.Estado == EstadoTurno.Pendiente)
+                    {
+                        return "Ya tenés una reserva en ese horario esperando el pago de la seña. " +
+                               "Completá el pago o esperá unos minutos a que se libere para volver a intentar.";
+                    }
+
                     return $"Ya hay un turno agendado en ese horario ({inicioExistente:dd/MM HH:mm} - {finExistente:HH:mm}).";
                 }
             }
@@ -66,7 +79,8 @@ namespace barberia_turnos_mvc.Services
         public async Task ExpirarTurnosVencidosAsync()
         {
             var barberiaId = _currentBarberia.GetRequerida().Id;
-            var limite = HoraArgentina.Ahora.AddMinutes(-2);
+            var minutosExpiracion = _config.GetValue<int?>("Turnos:MinutosExpiracionPendiente") ?? 2;
+            var limite = HoraArgentina.Ahora.AddMinutes(-minutosExpiracion);
 
             var turnosVencidos = await _context.Turnos
                 .Where(t => t.BarberiaId == barberiaId)
