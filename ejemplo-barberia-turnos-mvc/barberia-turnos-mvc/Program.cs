@@ -46,6 +46,7 @@ builder.Services.AddScoped<CurrentBarberiaService>();
 builder.Services.AddScoped<ICurrentBarberiaService>(sp => sp.GetRequiredService<CurrentBarberiaService>());
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IMercadoPagoTokenService, MercadoPagoTokenService>();
+builder.Services.AddHostedService<RecordatorioTurnoService>();
 
 // Rate limiting: Login y Register son los blancos típicos de fuerza bruta
 // y de bots creando cuentas en cadena. Particionamos por IP: cada IP tiene

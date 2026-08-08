@@ -62,5 +62,65 @@ namespace barberia_turnos_mvc.Controllers
 
             return View(modelo);
         }
+
+        public async Task<IActionResult> Estadisticas()
+        {
+            var barberiaId = _currentBarberia.GetRequerida().Id;
+            var hoy = HoraArgentina.Hoy;
+
+            // Ventana de 6 meses, incluyendo el mes actual.
+            var inicioVentana = new DateTime(hoy.Year, hoy.Month, 1).AddMonths(-5);
+
+            var turnos = await _context.Turnos
+                .Include(t => t.Servicio)
+                .Where(t => t.BarberiaId == barberiaId && t.FechaHora >= inicioVentana)
+                .ToListAsync();
+
+            // Turnos "Cancelado" no reflejan actividad real de la barbería:
+            // los sacamos de los conteos por mes y del ranking de servicios.
+            var turnosValidos = turnos.Where(t => t.Estado != EstadoTurno.Cancelado).ToList();
+
+            var meses = Enumerable.Range(0, 6)
+                .Select(i => inicioVentana.AddMonths(i))
+                .ToList();
+
+            var modelo = new EstadisticasViewModel
+            {
+                MesesLabels = meses.Select(m => m.ToString("MMM yyyy")).ToList(),
+                IngresosPorMes = meses
+                    .Select(m => turnosValidos
+                        .Where(t => t.SeñaPagada && t.FechaHora.Year == m.Year && t.FechaHora.Month == m.Month)
+                        .Sum(t => t.MontoSeña ?? 0))
+                    .ToList(),
+                TurnosPorMes = meses
+                    .Select(m => turnosValidos.Count(t => t.FechaHora.Year == m.Year && t.FechaHora.Month == m.Month))
+                    .ToList(),
+                TopServicios = turnosValidos
+                    .GroupBy(t => t.Servicio.Nombre)
+                    .Select(g => new RankingServicioDto
+                    {
+                        Nombre = g.Key,
+                        Cantidad = g.Count(),
+                        IngresoTotal = g.Where(t => t.SeñaPagada).Sum(t => t.MontoSeña ?? 0)
+                    })
+                    .OrderByDescending(s => s.Cantidad)
+                    .Take(5)
+                    .ToList(),
+                TotalTurnosUltimos6Meses = turnosValidos.Count,
+                IngresosUltimos6Meses = turnosValidos.Where(t => t.SeñaPagada).Sum(t => t.MontoSeña ?? 0)
+            };
+
+            // Tasa de no-show: solo tiene sentido sobre turnos que ya pasaron
+            // (Completado o NoShow). Si todavía no hubo ninguno, dejamos null
+            // para que la vista muestre "sin datos" en vez de un 0% engañoso.
+            var turnosPasados = turnosValidos.Count(t => t.Estado == EstadoTurno.Completado || t.Estado == EstadoTurno.NoShow);
+            if (turnosPasados > 0)
+            {
+                var noShows = turnosValidos.Count(t => t.Estado == EstadoTurno.NoShow);
+                modelo.TasaNoShow = Math.Round(noShows * 100.0 / turnosPasados, 1);
+            }
+
+            return View(modelo);
+        }
     }
 }

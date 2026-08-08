@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace barberia_turnos_mvc.Models
 {
@@ -19,6 +20,28 @@ namespace barberia_turnos_mvc.Models
 
    [Range(0, 100, ErrorMessage = "El porcentaje debe estar entre 0 y 100.")]
    public decimal PorcentajeSeña { get; set; } = 30;
+
+   // --- Sección "Nosotros" de la página pública ---
+   // Ambos son opcionales a propósito: mientras una barbería no cargue su
+   // propia Descripcion, el index no debe mostrar un bloque "Nosotros"
+   // vacío o con contenido genérico que le reste confianza al visitante
+   // (ver Home/Index.cshtml, que solo renderiza la sección si hay texto).
+   [MaxLength(600, ErrorMessage = "La descripción no puede superar los 600 caracteres.")]
+   public string? Descripcion { get; set; }
+
+   // URLs de las fotos para el slide, una por línea (se cargan y se
+   // separan en el formulario de Configuración). Guardadas como texto
+   // plano en vez de una tabla aparte: para las 3-5 fotos que necesita
+   // una barbería chica, una tabla extra con su propio CRUD es más
+   // complejidad de la que vale la pena mantener por ahora.
+   [MaxLength(2000)]
+   public string? FotosUrls { get; set; }
+
+   [NotMapped]
+   public List<string> Fotos =>
+       (FotosUrls ?? string.Empty)
+           .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+           .ToList();
 
    public ICollection<Servicio> Servicios { get; set; } = new List<Servicio>();
    public ICollection<Turno> Turnos { get; set; } = new List<Turno>();

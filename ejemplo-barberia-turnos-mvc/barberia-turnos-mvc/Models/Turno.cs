@@ -4,13 +4,13 @@ using System.ComponentModel.DataAnnotations;
 namespace barberia_turnos_mvc.Models
 {
     public enum EstadoTurno
-    { 
-        Pendiente, 
-        Confirmado, 
-        Cancelado, 
+    {
+        Pendiente,
+        Confirmado,
+        Cancelado,
         Completado,
         [Display(Name = "No se presentó")]
-        NoShow 
+        NoShow
     }
 
     public class Turno
@@ -40,6 +40,11 @@ namespace barberia_turnos_mvc.Models
         public string? MercadoPagoPaymentId { get; set; }
 
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
+
+        // Evita mandar el recordatorio dos veces si el BackgroundService
+        // corre más de una vez dentro de la ventana de "mañana" (ver
+        // RecordatorioTurnoService).
+        public bool RecordatorioEnviado { get; set; } = false;
 
     }
 }

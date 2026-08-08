@@ -44,6 +44,27 @@
         <span asp-validation-for="HoraCierre" class="text-danger"></span>
     </div>
 
+    <hr />
+    <h2 class="h5">Sección "Nosotros" (página pública)</h2>
+
+    <div class="form-group">
+        <label asp-for="Descripcion">Descripción breve de la barbería</label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3" maxlength="600"
+                  placeholder="Ej: Con más de 10 años en el barrio, en El Corte combinamos técnica clásica con las últimas tendencias..."></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
+        <small class="form-text text-muted">
+            Si la dejás vacía, la sección "Nosotros" no se muestra en tu página pública.
+        </small>
+    </div>
+    <div class="form-group">
+        <label asp-for="FotosUrls">Fotos para el slide (una URL por línea)</label>
+        <textarea asp-for="FotosUrls" class="form-control" rows="4"
+                  placeholder="https://ejemplo.com/foto1.jpg&#10;https://ejemplo.com/foto2.jpg"></textarea>
+        <small class="form-text text-muted">
+            Subí las fotos a cualquier servicio de imágenes (o pedinos ayuda) y pegá acá los links, uno por línea.
+        </small>
+    </div>
+
 
 
 
