@@ -7,6 +7,8 @@ namespace barberia_turnos_mvc.Models
  public class Barberia
   {
    public int Id { get; set; }
+
+   [Required(ErrorMessage = "El nombre de la barbería es obligatorio.")]
    public string Nombre { get; set; } = string.Empty;
    public string Direccion { get; set; } = string.Empty;
    public string Telefono { get; set; } = string.Empty;

@@ -27,6 +27,20 @@ builder.Services.AddControllersWithViews(options =>
     // comentario en RequiereBarberiaPropiaFilter.cs para el detalle de qué
     // problema de seguridad resuelve.
     options.Filters.Add<RequiereBarberiaPropiaFilter>();
+
+    // Con <Nullable>enable</Nullable> activo, MVC trata implícitamente
+    // como obligatorio cualquier propiedad "string" (no "string?"), sin
+    // que haga falta poner [Required]. Eso generó un bug real: Barberia.
+    // Direccion y Telefono son "string" pero NO son obligatorios en el
+    // registro (RegisterDueno), así que una barbería que arrancó sin
+    // cargar dirección queda con el campo vacío en la base — y después,
+    // en Configuración, el navegador bloquea el guardado en silencio
+    // porque considera ese campo "requerido e inválido", sin mostrar
+    // ningún error (Direccion no tiene <span asp-validation-for> en la
+    // vista). Lo desactivamos acá para que la obligatoriedad de cada
+    // campo dependa solo de los [Required] explícitos que ya se usan en
+    // todo el resto del proyecto (Servicio.Nombre, Cliente.Nombre, etc.).
+    options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
 });
 
 builder.Services.AddDbContext<BarberiaDbContext>(options =>
